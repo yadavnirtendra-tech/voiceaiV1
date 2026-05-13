@@ -9,7 +9,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
 </head>
 <body>
-  <div class="app-container" id="app">
+  <div class="app-container" id="app" style="display:none;">
 
     <!-- Navbar -->
     <nav class="navbar" id="navbar">
@@ -193,6 +193,56 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <div style="text-align:center; margin-bottom: 24px;">
+        <div class="logo-icon" style="margin: 0 auto 12px; width:48px; height:48px; font-size:1.5rem; background: var(--gradient-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff;">🔄</div>
+        <h2 style="font-size:1.25rem; font-weight:800;">Welcome to CalendarSync</h2>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Sign in to sync your life across platforms</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
+        <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="regName">Display Name</label>
+          <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Create Account</button>
+      </form>
+
+      <div class="auth-footer">
+        By continuing, you agree to our Terms of Service.
+      </div>
+    </div>
   </div>
 
   <!-- Toast Container -->

@@ -29,7 +29,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/public ./public
 
 # Set production environment
 ENV NODE_ENV=production

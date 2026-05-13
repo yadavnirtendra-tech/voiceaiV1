@@ -1,7 +1,7 @@
 /**
  * Core Sync Engine - The State Machine Orchestrator
  * Processes webhook events through the full sync pipeline
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import { shouldProcessEvent, markAsProcessed, isAlreadyProcessed } from './loopGuard.js';
 import { checkConflicts, resolveConflict } from './conflictResolver.js';

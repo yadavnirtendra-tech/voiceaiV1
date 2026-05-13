@@ -50,15 +50,85 @@ async function checkAuthStatus() {
       currentUser = data.user;
       showAuthenticatedUI();
       fetchDashboardData();
+      hideAuthOverlay();
     } else {
       showUnauthenticatedUI();
+      showAuthOverlay();
     }
   } catch {
     showUnauthenticatedUI();
+    showAuthOverlay();
+  }
+}
+
+// ---- Auth UI Helpers ----
+function showAuthOverlay() {
+  document.getElementById('authOverlay').classList.add('active');
+}
+
+function hideAuthOverlay() {
+  document.getElementById('authOverlay').classList.remove('active');
+}
+
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('loginForm').style.display = isLogin ? 'flex' : 'none';
+  document.getElementById('registerForm').style.display = isLogin ? 'none' : 'flex';
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Welcome back!', 'success');
+      checkAuthStatus();
+    } else {
+      showToast(data.error || 'Login failed', 'error');
+    }
+  } catch (error) {
+    showToast('Login failed', 'error');
+  }
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const displayName = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ displayName, email, password }),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Account created!', 'success');
+      checkAuthStatus();
+    } else {
+      showToast(data.error || 'Registration failed', 'error');
+    }
+  } catch (error) {
+    showToast('Registration failed', 'error');
   }
 }
 
 function showAuthenticatedUI() {
+  document.getElementById('app').style.display = 'block';
   const userInfo = document.getElementById('userInfo');
   const logoutBtn = document.getElementById('logoutBtn');
   const userAvatar = document.getElementById('userAvatar');
@@ -71,6 +141,7 @@ function showAuthenticatedUI() {
 }
 
 function showUnauthenticatedUI() {
+  document.getElementById('app').style.display = 'none';
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
 }
@@ -82,6 +153,7 @@ async function logout() {
     showUnauthenticatedUI();
     resetDashboard();
     showToast('Logged out successfully', 'success');
+    showAuthOverlay();
   } catch {
     showToast('Logout failed', 'error');
   }

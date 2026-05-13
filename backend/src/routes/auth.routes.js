@@ -1,7 +1,7 @@
 /**
  * Authentication Routes
  * OAuth connect/callback for Google and Microsoft
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import { Router } from 'express';
 import { authenticate, generateToken, optionalAuth } from '../middleware/auth.js';
@@ -12,22 +12,96 @@ import * as googleWebhook from '../services/google/webhook.service.js';
 import * as msWebhook from '../services/microsoft/webhook.service.js';
 import { fullSync } from '../services/sync/engine.js';
 import { users, identities, webhookSubscriptions, shadowBlocks } from '../db/index.js';
+import bcrypt from 'bcryptjs';
 import config from '../config/env.js';
 import logger from '../utils/logger.js';
 
 const router = Router();
 
+// ============ Traditional Auth ============
+
+/** POST /api/auth/register - Create new account */
+router.post('/register', authLimiter, async (req, res) => {
+  try {
+    const { email, password, displayName } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const existingUser = await users.findByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await users.create({
+      email,
+      passwordHash,
+      displayName: displayName || email.split('@')[0],
+    });
+
+    const token = generateToken(user.id);
+    res.cookie('auth_token', token, { 
+      httpOnly: true, 
+      secure: config.nodeEnv === 'production', 
+      sameSite: 'lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      user: { id: user.id, email: user.email, displayName: user.displayName } 
+    });
+  } catch (error) {
+    logger.error('Registration failed', { error: error.message });
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+/** POST /api/auth/login - Existing account login */
+router.post('/login', authLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = await users.findByEmail(email);
+    if (!user || !user.passwordHash) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user.id);
+    res.cookie('auth_token', token, { 
+      httpOnly: true, 
+      secure: config.nodeEnv === 'production', 
+      sameSite: 'lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
+
+    res.json({ 
+      success: true, 
+      user: { id: user.id, email: user.email, displayName: user.displayName } 
+    });
+  } catch (error) {
+    logger.error('Login failed', { error: error.message });
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
 // ============ Google OAuth ============
 
 /** GET /api/auth/google - Start Google OAuth flow */
-router.get('/google', authLimiter, optionalAuth, async (req, res) => {
+router.get('/google', authLimiter, authenticate, async (req, res) => {
   try {
-    let userId = req.user?.id;
-    if (!userId) {
-      // Create a new user for first-time connect
-      const user = await users.create({ email: `pending-${Date.now()}@temp`, displayName: 'New User' });
-      userId = user.id;
-    }
+    const userId = req.user.id;
     const authUrl = googleAuth.getAuthUrl(userId);
     res.redirect(authUrl);
   } catch (error) {
@@ -70,13 +144,9 @@ router.get('/google/callback', async (req, res) => {
 // ============ Microsoft OAuth ============
 
 /** GET /api/auth/microsoft - Start Microsoft OAuth flow */
-router.get('/microsoft', authLimiter, optionalAuth, async (req, res) => {
+router.get('/microsoft', authLimiter, authenticate, async (req, res) => {
   try {
-    let userId = req.user?.id;
-    if (!userId) {
-      const user = await users.create({ email: `pending-${Date.now()}@temp`, displayName: 'New User' });
-      userId = user.id;
-    }
+    const userId = req.user.id;
     const authUrl = await msAuth.getAuthUrl(userId);
     res.redirect(authUrl);
   } catch (error) {
