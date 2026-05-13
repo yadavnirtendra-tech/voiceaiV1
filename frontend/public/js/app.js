@@ -43,9 +43,14 @@ function checkUrlParams() {
 
 // ---- Auth ----
 async function checkAuthStatus() {
+  console.log('Checking auth status...');
   try {
     const res = await fetch('/api/auth/status', { credentials: 'include' });
     const data = await res.json();
+    console.log('Auth check result:', data);
+    
+    document.getElementById('loadingOverlay').style.display = 'none';
+    
     if (data.authenticated && data.user) {
       currentUser = data.user;
       showAuthenticatedUI();
@@ -55,7 +60,9 @@ async function checkAuthStatus() {
       showUnauthenticatedUI();
       showAuthOverlay();
     }
-  } catch {
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    document.getElementById('loadingOverlay').style.display = 'none';
     showUnauthenticatedUI();
     showAuthOverlay();
   }
@@ -63,11 +70,15 @@ async function checkAuthStatus() {
 
 // ---- Auth UI Helpers ----
 function showAuthOverlay() {
-  document.getElementById('authOverlay').classList.add('active');
+  const el = document.getElementById('authOverlay');
+  el.style.display = 'flex';
+  el.classList.add('active');
 }
 
 function hideAuthOverlay() {
-  document.getElementById('authOverlay').classList.remove('active');
+  const el = document.getElementById('authOverlay');
+  el.classList.remove('active');
+  setTimeout(() => { el.style.display = 'none'; }, 400);
 }
 
 function switchTab(tab) {
@@ -77,11 +88,16 @@ function switchTab(tab) {
   document.getElementById('loginForm').style.display = isLogin ? 'flex' : 'none';
   document.getElementById('registerForm').style.display = isLogin ? 'none' : 'flex';
 }
+window.switchTab = switchTab;
 
 async function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Signing in...';
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -99,14 +115,22 @@ async function handleLogin(e) {
     }
   } catch (error) {
     showToast('Login failed', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign In';
   }
 }
+window.handleLogin = handleLogin;
 
 async function handleRegister(e) {
   e.preventDefault();
   const displayName = document.getElementById('regName').value;
   const email = document.getElementById('regEmail').value;
   const password = document.getElementById('regPassword').value;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Creating account...';
 
   try {
     const res = await fetch('/api/auth/register', {
@@ -124,8 +148,12 @@ async function handleRegister(e) {
     }
   } catch (error) {
     showToast('Registration failed', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account';
   }
 }
+window.handleRegister = handleRegister;
 
 function showAuthenticatedUI() {
   document.getElementById('app').style.display = 'block';
