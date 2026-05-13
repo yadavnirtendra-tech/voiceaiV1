@@ -211,8 +211,20 @@ async function logout() {
     showToast('Logged out successfully', 'success');
   }
 }
+window.logout = logout;
 
 // ---- Dashboard Data ----
+// ---- Calendar Integrations ----
+function connectGoogle() {
+  window.location.href = '/api/auth/google';
+}
+window.connectGoogle = connectGoogle;
+
+function connectMicrosoft() {
+  window.location.href = '/api/auth/microsoft';
+}
+window.connectMicrosoft = connectMicrosoft;
+
 async function fetchDashboardData() {
   if (!currentUser) return;
   try {
