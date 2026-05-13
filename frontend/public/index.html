@@ -21,6 +21,9 @@
         <span class="status-dot"></span>
         <span id="statusText">System Ready</span>
       </div>
+      <div class="navbar-datetime" id="currentDateTime" style="font-size:0.85rem; color:var(--text-secondary); margin-right: 15px;">
+        --
+      </div>
       <div class="navbar-actions">
         <div class="navbar-user" id="userInfo" style="display:none;">
           <div class="user-avatar" id="userAvatar">U</div>
@@ -114,6 +117,22 @@
             <div class="empty-state">
               <div class="empty-icon">📭</div>
               <p>No sync activity yet.<br>Activity will appear here once calendars are connected.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meetings List -->
+      <div class="card" style="margin-top:24px;" id="meetingsCard">
+        <div class="card-header">
+          <span class="card-title">📅 All Unified Meetings</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Upcoming events across all connected accounts</span>
+        </div>
+        <div class="card-body">
+          <div id="meetingsList" style="display:flex; flex-direction:column; gap:10px;">
+            <div class="empty-state">
+              <div class="empty-icon">🗓️</div>
+              <p>No meetings found or calendars not connected.</p>
             </div>
           </div>
         </div>

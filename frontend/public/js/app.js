@@ -11,7 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
   checkUrlParams();
   checkAuthStatus();
   startPolling();
+  startClock();
 });
+
+// ---- Clock ----
+function startClock() {
+  const el = document.getElementById('currentDateTime');
+  if(!el) return;
+  setInterval(() => {
+    const now = new Date();
+    el.textContent = now.toLocaleString(undefined, { 
+      weekday: 'short', month: 'short', day: 'numeric', 
+      hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    });
+  }, 1000);
+}
 
 // ---- URL Params (post-OAuth redirect) ----
 function checkUrlParams() {
@@ -77,14 +91,26 @@ async function logout() {
 async function fetchDashboardData() {
   if (!currentUser) return;
   try {
-    const res = await fetch('/api/dashboard/stats', { credentials: 'include' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.success) {
-      updateStats(data.stats);
-      updateAccounts(currentUser.identities || []);
-      updateActivity(data.recentActivity || []);
-      updateStatus(data.stats);
+    const [statsRes, eventsRes] = await Promise.all([
+      fetch('/api/dashboard/stats', { credentials: 'include' }),
+      fetch('/api/calendar/events', { credentials: 'include' })
+    ]);
+    
+    if (statsRes.ok) {
+      const data = await statsRes.json();
+      if (data.success) {
+        updateStats(data.stats);
+        updateAccounts(currentUser.identities || []);
+        updateActivity(data.recentActivity || []);
+        updateStatus(data.stats);
+      }
+    }
+    
+    if (eventsRes.ok) {
+      const eventData = await eventsRes.json();
+      if (eventData.success) {
+        updateMeetings(eventData.events || []);
+      }
     }
   } catch (e) {
     console.error('Dashboard fetch error:', e);
@@ -175,7 +201,50 @@ function resetDashboard() {
   });
   document.getElementById('accountsList').innerHTML = '<div class="empty-state"><div class="empty-icon">🔌</div><p>No calendars connected.</p></div>';
   document.getElementById('activityFeed').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No activity yet.</p></div>';
+  document.getElementById('meetingsList').innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No meetings found or calendars not connected.</p></div>';
   document.getElementById('statusText').textContent = 'System Ready';
+}
+
+function updateMeetings(events) {
+  const container = document.getElementById('meetingsList');
+  if (!events.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No upcoming meetings found.</p></div>';
+    return;
+  }
+  
+  const now = new Date();
+  // Filter out past events and sort
+  const upcoming = events
+    .filter(e => new Date(e.endTime) > now)
+    .sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
+    
+  if(!upcoming.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No upcoming meetings found.</p></div>';
+    return;
+  }
+
+  container.innerHTML = upcoming.map(event => {
+    const start = new Date(event.startTime);
+    const end = new Date(event.endTime);
+    const isGoogle = event.identity?.providerType?.startsWith('GOOGLE');
+    const color = isGoogle ? '#ea4335' : '#0078d4';
+    
+    return `
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-left: 4px solid ${color}; padding: 12px 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">${event.title || 'Busy'}</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); display:flex; gap: 10px;">
+            <span>🕒 ${start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            <span>📅 ${start.toLocaleDateString()}</span>
+            ${event.location ? `<span>📍 ${event.location}</span>` : ''}
+          </div>
+        </div>
+        <div style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: ${color};">
+          ${event.identity?.providerEmail || 'Calendar'}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ---- Actions ----

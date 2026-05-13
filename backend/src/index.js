@@ -55,10 +55,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ============ Static Files (Dashboard) ============
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
-// ============ Rate Limiting ============
+// ============ API Routes ============
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
@@ -86,13 +83,6 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
-});
-
-// SPA fallback
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-  }
 });
 
 // ============ Error Handler ============
