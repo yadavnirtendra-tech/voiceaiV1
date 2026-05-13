@@ -22,6 +22,9 @@
       <div style="text-align:center; margin-bottom: 24px;">
         <div class="logo-icon" style="margin: 0 auto 12px; width:48px; height:48px; font-size:1.5rem; background: var(--gradient-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff;">🔄</div>
         <h2 style="font-size:1.5rem; font-weight:800;">CalendarSync AI</h2>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" style="padding: 4px 8px; border-radius: 50%;">🌓</button>
+        </div>
         <p style="font-size:0.88rem; color:var(--text-secondary); margin-top:4px;">Log in to access your unified calendar</p>
       </div>
 
@@ -78,6 +81,7 @@
         <span id="syncStatus">System Online</span>
         <span style="margin: 0 8px; opacity: 0.2;">|</span>
         <span id="liveClock" style="font-family: monospace; font-weight: 600; min-width: 80px;">--:--:--</span>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" style="margin-left: 15px; padding: 4px 8px; border-radius: 50%;">🌓</button>
       </div>
       <div class="navbar-datetime" id="currentDateTime" style="font-size:0.85rem; color:var(--text-secondary); margin-right: 15px;">
         --
