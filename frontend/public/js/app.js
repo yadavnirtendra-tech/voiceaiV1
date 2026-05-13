@@ -49,36 +49,34 @@ async function checkAuthStatus() {
     const data = await res.json();
     console.log('Auth check result:', data);
     
+    // Always hide the loading spinner first
     document.getElementById('loadingOverlay').style.display = 'none';
     
     if (data.authenticated && data.user) {
       currentUser = data.user;
+      hideAuthUI();
       showAuthenticatedUI();
       fetchDashboardData();
-      hideAuthOverlay();
     } else {
       showUnauthenticatedUI();
-      showAuthOverlay();
+      showAuthUI();
     }
   } catch (error) {
     console.error('Auth check failed:', error);
     document.getElementById('loadingOverlay').style.display = 'none';
     showUnauthenticatedUI();
-    showAuthOverlay();
+    showAuthUI();
   }
 }
 
 // ---- Auth UI Helpers ----
-function showAuthOverlay() {
-  const el = document.getElementById('authOverlay');
-  el.style.display = 'flex';
-  el.classList.add('active');
+function showAuthUI() {
+  document.getElementById('authSection').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
 }
 
-function hideAuthOverlay() {
-  const el = document.getElementById('authOverlay');
-  el.classList.remove('active');
-  setTimeout(() => { el.style.display = 'none'; }, 400);
+function hideAuthUI() {
+  document.getElementById('authSection').style.display = 'none';
 }
 
 function switchTab(tab) {
@@ -109,6 +107,7 @@ async function handleLogin(e) {
     const data = await res.json();
     if (data.success) {
       showToast('Welcome back!', 'success');
+      hideAuthUI();
       checkAuthStatus();
     } else {
       showToast(data.error || 'Login failed', 'error');
@@ -142,6 +141,7 @@ async function handleRegister(e) {
     const data = await res.json();
     if (data.success) {
       showToast('Account created!', 'success');
+      hideAuthUI();
       checkAuthStatus();
     } else {
       showToast(data.error || 'Registration failed', 'error');
@@ -181,7 +181,7 @@ async function logout() {
     showUnauthenticatedUI();
     resetDashboard();
     showToast('Logged out successfully', 'success');
-    showAuthOverlay();
+    showAuthUI();
   } catch {
     showToast('Logout failed', 'error');
   }

@@ -9,12 +9,62 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
 </head>
 <body>
+  <!-- Initial Loading State -->
   <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
-    <div class="logo-icon" style="width:64px; height:64px; font-size:2rem;">🔄</div>
+    <div class="logo-icon" style="width:64px; height:64px; font-size:2rem; background: var(--gradient-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff;">🔄</div>
     <div class="spinner"></div>
-    <p style="color:var(--text-secondary); font-size:0.9rem;">Initializing Secure Connection...</p>
+    <p style="color:var(--text-secondary); font-size:0.9rem;">Securing Session...</p>
   </div>
 
+  <!-- Auth Section (Shown by default if unauthenticated) -->
+  <div id="authSection" style="display:none; min-height:100vh; width:100%; align-items:center; justify-content:center; background:var(--bg-primary);">
+    <div class="auth-modal" style="position:relative; margin: 40px auto; opacity:1; pointer-events:all;">
+      <div style="text-align:center; margin-bottom: 24px;">
+        <div class="logo-icon" style="margin: 0 auto 12px; width:48px; height:48px; font-size:1.5rem; background: var(--gradient-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff;">🔄</div>
+        <h2 style="font-size:1.5rem; font-weight:800;">CalendarSync AI</h2>
+        <p style="font-size:0.88rem; color:var(--text-secondary); margin-top:4px;">Log in to access your unified calendar</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
+        <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</div>
+      </div>
+
+      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
+      </form>
+
+      <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="regName">Display Name</label>
+          <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Create Account</button>
+      </form>
+
+      <div class="auth-footer">
+        © 2026 CalendarSync AI. Secure Enterprise Grade Sync.
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Section (Hidden by default) -->
   <div class="app-container" id="app" style="display:none;">
 
     <!-- Navbar -->
@@ -199,56 +249,6 @@
       </div>
 
     </main>
-  </div>
-
-  <!-- Auth Overlay -->
-  <div class="auth-overlay active" id="authOverlay" style="display:none;">
-    <div class="auth-modal">
-      <div style="text-align:center; margin-bottom: 24px;">
-        <div class="logo-icon" style="margin: 0 auto 12px; width:48px; height:48px; font-size:1.5rem; background: var(--gradient-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff;">🔄</div>
-        <h2 style="font-size:1.25rem; font-weight:800;">Welcome to CalendarSync</h2>
-        <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Sign in to sync your life across platforms</p>
-      </div>
-
-      <div class="auth-tabs">
-        <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
-        <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</div>
-      </div>
-
-      <!-- Login Form -->
-      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="loginEmail">Email Address</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
-      </form>
-
-      <!-- Register Form -->
-      <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
-        <div class="form-group">
-          <label for="regName">Display Name</label>
-          <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
-        </div>
-        <div class="form-group">
-          <label for="regEmail">Email Address</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="regPassword">Password</label>
-          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Create Account</button>
-      </form>
-
-      <div class="auth-footer">
-        By continuing, you agree to our Terms of Service.
-      </div>
-    </div>
   </div>
 
   <!-- Toast Container -->
