@@ -53,7 +53,7 @@ describe('API Integration Tests', () => {
       const { status, json } = await request('/api/health');
       assert.equal(status, 200);
       assert.equal(json.status, 'healthy');
-      assert.equal(json.service, 'CalendarSync AI');
+      assert.equal(json.service, 'OpenCalendar');
       assert.ok(json.version);
       assert.ok(json.timestamp);
     });
@@ -101,7 +101,7 @@ describe('API Integration Tests', () => {
     it('should serve the dashboard HTML', async () => {
       const { status, text } = await request('/');
       assert.equal(status, 200);
-      assert.ok(text.includes('CalendarSync AI'));
+      assert.ok(text.includes('OpenCalendar'));
     });
   });
 });

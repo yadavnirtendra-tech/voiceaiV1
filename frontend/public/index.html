@@ -10,14 +10,14 @@
 </head>
 <body>
   <!-- Initial Loading State -->
-  <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
-    <img src="img/logo.png" alt="CalendarSync AI" style="width:64px; height:64px; border-radius:12px; margin-bottom: 20px;">
+  <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
+    <img src="img/logo.png" alt="OpenCalendar" style="width:64px; height:64px; border-radius:12px; margin-bottom: 20px;">
     <div class="spinner"></div>
-    <p style="color:var(--text-secondary); font-size:0.9rem;">Securing Session...</p>
+    <p style="color:var(--text-secondary); font-size:0.9rem;">Initializing OpenCalendar...</p>
   </div>
 
-  <!-- Public Landing Page -->
-  <div id="landingPage" style="display:none;">
+  <!-- Public Landing Page - VISIBLE BY DEFAULT FOR GOOGLE VERIFICATION -->
+  <div id="landingPage" style="display:block;">
     <!-- Hero Section -->
     <header style="padding: 100px 20px; text-align: center; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);">
       <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Intelligence</h1>

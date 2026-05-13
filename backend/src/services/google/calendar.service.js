@@ -99,7 +99,7 @@ export async function createShadowBlock(identity, eventData) {
 
   const event = {
     summary: eventData.title || SHADOW_BLOCK_TITLE,
-    description: eventData.description || 'This time slot has been reserved by CalendarSync AI.',
+    description: eventData.description || 'This time slot has been reserved by OpenCalendar.',
     start: {
       dateTime: new Date(eventData.startTime).toISOString(),
       timeZone: eventData.timeZone || 'UTC',

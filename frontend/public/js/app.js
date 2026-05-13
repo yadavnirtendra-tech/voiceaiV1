@@ -1,5 +1,5 @@
 /**
- * CalendarSync AI - Dashboard JavaScript
+ * OpenCalendar - Dashboard JavaScript
  */
 
 // ---- State ----
@@ -53,29 +53,27 @@ function checkUrlParams() {
 
 // ---- Auth ----
 async function checkAuthStatus() {
-  console.log('Checking auth status...');
+  const overlay = document.getElementById('loadingOverlay');
+  // Only show overlay if we were already in the app, otherwise keep it hidden to show landing page
+  if (currentUser) overlay.style.display = 'flex';
+
   try {
     const res = await fetch('/api/auth/status', { credentials: 'include' });
     const data = await res.json();
-    console.log('Auth check result:', data);
-    
-    // Always hide the loading spinner first
-    document.getElementById('loadingOverlay').style.display = 'none';
     
     if (data.authenticated && data.user) {
       currentUser = data.user;
-      hideAuthUI();
       showAuthenticatedUI();
       fetchDashboardData();
     } else {
+      currentUser = null;
       showUnauthenticatedUI();
-      showAuthUI();
     }
   } catch (error) {
     console.error('Auth check failed:', error);
-    document.getElementById('loadingOverlay').style.display = 'none';
     showUnauthenticatedUI();
-    showAuthUI();
+  } finally {
+    overlay.style.display = 'none';
   }
 }
 

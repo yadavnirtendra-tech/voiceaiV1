@@ -104,7 +104,7 @@ export async function createShadowBlock(identity, eventData) {
     subject: eventData.title || SHADOW_BLOCK_TITLE,
     body: {
       contentType: 'text',
-      content: eventData.description || 'This time slot has been reserved by CalendarSync AI.',
+      content: eventData.description || 'This time slot has been reserved by OpenCalendar.',
     },
     start: {
       dateTime: new Date(eventData.startTime).toISOString(),

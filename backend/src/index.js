@@ -1,5 +1,5 @@
 /**
- * CalendarSync AI - Main Entry Point
+ * OpenCalendar - Main Entry Point
  * Express server with webhook listeners and cron jobs
  */
 import express from 'express';
@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
   res.send(`
     <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0a0e1a; color: #fff; margin: 0;">
       <div style="text-align: center; padding: 40px; background: #111827; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <h1 style="color: #6366f1;">🚀 CalendarSync AI Backend</h1>
+        <h1 style="color: #6366f1;">🚀 OpenCalendar Backend</h1>
         <p style="color: #94a3b8;">Status: <span style="color: #10b981;">Online & Secure</span></p>
         <p style="font-size: 0.9rem; color: #64748b;">The API is functioning correctly. Access the dashboard via your frontend URL.</p>
       </div>
@@ -91,7 +91,7 @@ app.get('/', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'CalendarSync AI API',
+    service: 'OpenCalendar API',
     environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
     uptime: `${Math.floor(process.uptime())}s`,
@@ -126,7 +126,7 @@ cron.schedule('0 * * * *', async () => {
 
 // ============ Start Server ============
 app.listen(config.port, () => {
-  logger.info(`🚀 CalendarSync AI running on port ${config.port}`);
+  logger.info(`🚀 OpenCalendar running on port ${config.port}`);
   logger.info(`📊 Dashboard: ${config.apiBaseUrl}`);
   logger.info(`🔗 Google OAuth: ${config.apiBaseUrl}/api/auth/google`);
   logger.info(`🔗 Microsoft OAuth: ${config.apiBaseUrl}/api/auth/microsoft`);
