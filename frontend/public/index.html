@@ -87,6 +87,15 @@
         --
       </div>
       <div class="navbar-actions">
+        <select id="timezoneSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.8rem; margin-right: 15px;" onchange="updateTimezone(this.value)">
+          <option value="UTC">UTC</option>
+          <option value="America/New_York">New York (EST)</option>
+          <option value="Europe/London">London (GMT)</option>
+          <option value="Asia/Dubai">Dubai (GST)</option>
+          <option value="Asia/Kolkata">Mumbai (IST)</option>
+          <option value="Asia/Singapore">Singapore (SGT)</option>
+          <option value="Australia/Sydney">Sydney (AEST)</option>
+        </select>
         <div class="navbar-user" id="userInfo" style="display:none;">
           <div class="user-avatar" id="userAvatar">U</div>
           <span id="userEmail"></span>

@@ -176,6 +176,10 @@ function showAuthenticatedUI() {
   logoutBtn.style.display = 'inline-flex';
   userAvatar.textContent = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
   userEmail.textContent = currentUser.email || '';
+  
+  if (currentUser.timezone) {
+    document.getElementById('timezoneSelect').value = currentUser.timezone;
+  }
 }
 
 function showUnauthenticatedUI() {
@@ -303,7 +307,7 @@ function updateActivity(logs) {
       <div class="activity-dot ${log.status === 'COMPLETED' ? 'created' : 'error'}"></div>
       <div class="activity-content">
         <div class="activity-text"><strong>${log.action.replace(/_/g, ' ')}</strong> - ${log.status}</div>
-        <div class="activity-time">${new Date(log.createdAt).toLocaleString()}</div>
+        <div class="activity-time">${new Date(log.startedAt).toLocaleString()}</div>
       </div>
     </div>`;
   }).join('');
@@ -441,7 +445,24 @@ function capitalize(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 }
 
-// ---- Toast Notifications ----
+async function updateTimezone(timezone) {
+  try {
+    const res = await fetch('/api/user/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timezone }),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Timezone updated to ${timezone}`, 'success');
+    }
+  } catch (error) {
+    showToast('Failed to update timezone', 'error');
+  }
+}
+window.updateTimezone = updateTimezone;
+
 function showToast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
