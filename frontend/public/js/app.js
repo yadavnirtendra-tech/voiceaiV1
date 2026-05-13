@@ -16,14 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---- Clock ----
 function startClock() {
-  const el = document.getElementById('currentDateTime');
-  if(!el) return;
   setInterval(() => {
-    const now = new Date();
-    el.textContent = now.toLocaleString(undefined, { 
-      weekday: 'short', month: 'short', day: 'numeric', 
-      hour: '2-digit', minute: '2-digit', second: '2-digit' 
-    });
+    const el = document.getElementById('liveClock');
+    if (el) el.textContent = new Date().toLocaleTimeString();
   }, 1000);
 }
 
@@ -202,7 +197,8 @@ async function fetchDashboardData() {
         updateStats(data.stats);
         updateAccounts(currentUser.identities || []);
         updateActivity(data.recentActivity || []);
-        updateStatus(data.stats);
+        updateSyncStatus('System Online', 'emerald');
+        updateLastUpdated();
       }
     }
     
@@ -241,6 +237,18 @@ function animateNumber(elId, target) {
   requestAnimationFrame(update);
 }
 
+function updateSyncStatus(text, colorVar) {
+  const statusText = document.getElementById('syncStatus');
+  const dot = document.querySelector('.navbar-status .status-dot');
+  if (statusText) statusText.textContent = text;
+  if (dot) dot.style.background = `var(--accent-${colorVar})`;
+}
+
+function updateLastUpdated() {
+  const el = document.getElementById('lastUpdated');
+  if (el) el.textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+}
+
 function updateAccounts(identities) {
   const container = document.getElementById('accountsList');
   if (!identities.length) {
@@ -276,24 +284,16 @@ function updateActivity(logs) {
   }
 
   container.innerHTML = logs.slice(0, 8).map(log => {
-    const dotClass = getDotClass(log.action, log.status);
-    const text = getLogText(log);
     return `<div class="activity-item">
-      <span class="activity-dot ${dotClass}"></span>
-      <div>
-        <div class="activity-text">${text}</div>
-        <div class="activity-time">${timeAgo(log.startedAt)}</div>
+      <div class="activity-dot ${log.status === 'COMPLETED' ? 'created' : 'error'}"></div>
+      <div class="activity-content">
+        <div class="activity-text"><strong>${log.action.replace(/_/g, ' ')}</strong> - ${log.status}</div>
+        <div class="activity-time">${new Date(log.createdAt).toLocaleString()}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-function updateStatus(stats) {
-  const statusText = document.getElementById('statusText');
-  if (stats.connectedCalendars > 0) {
-    statusText.textContent = `${stats.connectedCalendars} calendar${stats.connectedCalendars > 1 ? 's' : ''} synced`;
-  }
-}
 
 function resetDashboard() {
   ['statCalendars','statEvents','statShadows','statSyncs'].forEach(id => {

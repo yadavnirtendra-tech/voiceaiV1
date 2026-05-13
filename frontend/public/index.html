@@ -73,9 +73,11 @@
         <span class="logo-icon">🔄</span>
         CalendarSync AI
       </a>
-      <div class="navbar-status" id="syncStatus">
-        <span class="status-dot"></span>
-        <span id="statusText">System Ready</span>
+      <div class="navbar-status">
+        <div class="status-dot"></div>
+        <span id="syncStatus">System Online</span>
+        <span style="margin: 0 8px; opacity: 0.2;">|</span>
+        <span id="liveClock" style="font-family: monospace; font-weight: 600; min-width: 80px;">--:--:--</span>
       </div>
       <div class="navbar-datetime" id="currentDateTime" style="font-size:0.85rem; color:var(--text-secondary); margin-right: 15px;">
         --
@@ -226,7 +228,10 @@
       <!-- Architecture Info -->
       <div class="card" style="margin-top:24px;">
         <div class="card-header">
-          <span class="card-title">🏗️ Architecture</span>
+          <div class="card-title">
+            <span class="card-icon">📜</span> Recent Activity
+          </div>
+          <span id="lastUpdated" style="font-size: 0.7rem; color: var(--text-muted);">Never updated</span>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
           <div>
