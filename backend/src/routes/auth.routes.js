@@ -49,13 +49,10 @@ router.post('/register', authLimiter, async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 
     });
 
-    res.status(201).json({ 
-      success: true, 
-      user: { id: user.id, email: user.email, displayName: user.displayName } 
-    });
+    res.status(201).json({ success: true, user: { id: user.id, email: user.email, displayName: user.displayName } });
   } catch (error) {
-    logger.error('Registration failed', { error: error.message });
-    res.status(500).json({ error: 'Registration failed' });
+    logger.error('Registration failed details', { error: error.message, stack: error.stack, body: req.body });
+    res.status(500).json({ error: 'Registration failed. Please ensure the database is initialized correctly.' });
   }
 });
 
