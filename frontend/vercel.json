@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://<your-railway-app-url>.up.railway.app/api/$1"
+      "destination": "https://autocalender-production.up.railway.app/api/$1"
     },
     {
       "source": "/(.*)",
