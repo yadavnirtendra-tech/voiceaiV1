@@ -166,7 +166,10 @@ async function handleRegister(e) {
 window.handleRegister = handleRegister;
 
 function showAuthenticatedUI() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('landingPage').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  
   const userInfo = document.getElementById('userInfo');
   const logoutBtn = document.getElementById('logoutBtn');
   const userAvatar = document.getElementById('userAvatar');
@@ -183,6 +186,9 @@ function showAuthenticatedUI() {
 }
 
 function showUnauthenticatedUI() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('landingPage').style.display = 'block';
+  document.getElementById('authSection').style.display = 'block';
   document.getElementById('app').style.display = 'none';
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
