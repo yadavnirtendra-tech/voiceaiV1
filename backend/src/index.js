@@ -74,14 +74,27 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/user', calendarRoutes);  // User routes are in the same file
 app.use('/api/dashboard', calendarRoutes);
 
+// Root route for sanity check
+app.get('/', (req, res) => {
+  res.send(`
+    <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0a0e1a; color: #fff; margin: 0;">
+      <div style="text-align: center; padding: 40px; background: #111827; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h1 style="color: #6366f1;">🚀 CalendarSync AI Backend</h1>
+        <p style="color: #94a3b8;">Status: <span style="color: #10b981;">Online & Secure</span></p>
+        <p style="font-size: 0.9rem; color: #64748b;">The API is functioning correctly. Access the dashboard via your frontend URL.</p>
+      </div>
+    </body>
+  `);
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'CalendarSync AI',
-    version: '1.0.0',
+    service: 'CalendarSync AI API',
+    environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
+    uptime: `${Math.floor(process.uptime())}s`,
   });
 });
 
