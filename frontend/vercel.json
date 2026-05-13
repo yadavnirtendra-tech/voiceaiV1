@@ -7,6 +7,10 @@
       "destination": "https://autocalender-production.up.railway.app/api/$1"
     },
     {
+      "source": "/((?!api|public|js|css|img|assets).*)",
+      "destination": "/public/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }
