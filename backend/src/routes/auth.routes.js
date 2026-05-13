@@ -203,10 +203,14 @@ router.post('/disconnect/:identityId', authenticate, async (req, res) => {
   }
 });
 
-/** POST /api/auth/logout */
 router.post('/logout', (req, res) => {
-  res.clearCookie('auth_token');
-  res.json({ success: true });
+  res.clearCookie('auth_token', { 
+    httpOnly: true, 
+    secure: config.nodeEnv === 'production', 
+    sameSite: 'lax',
+    path: '/' 
+  });
+  res.json({ success: true, message: 'Logged out' });
 });
 
 /** GET /api/auth/status */

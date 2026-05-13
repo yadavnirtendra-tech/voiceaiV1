@@ -371,3 +371,76 @@ body::before {
 }
 .form-control:focus { outline: none; border-color: var(--accent-indigo); background: rgba(255,255,255,0.05); }
 .auth-footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+
+/* ---- Meeting Cards ---- */
+.meeting-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  gap: 20px;
+  transition: var(--transition);
+  margin-bottom: 12px;
+}
+
+.meeting-card:hover {
+  transform: translateX(5px);
+  background: var(--bg-card-hover);
+  border-color: var(--accent-indigo);
+}
+
+.meeting-time-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  padding-right: 20px;
+  border-right: 1px solid var(--border-color);
+}
+
+.m-date { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+.m-time { font-size: 1.05rem; font-weight: 700; color: var(--accent-indigo); white-space: nowrap; }
+
+.meeting-info { flex: 1; min-width: 0; }
+.meeting-title { font-weight: 600; font-size: 1rem; margin-bottom: 8px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meeting-details { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.provider-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.provider-badge.google { background: #ea4335; }
+.provider-badge.microsoft { background: #0078d4; }
+
+.sync-badge {
+  font-size: 0.65rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-emerald);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meeting-card.system-gen {
+  border-left: 4px solid var(--accent-amber);
+}
+
+.meeting-card.system-gen .sync-badge {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--accent-amber);
+}
+
+.m-loc { font-size: 0.8rem; color: var(--text-secondary); }

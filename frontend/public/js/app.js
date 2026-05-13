@@ -192,6 +192,10 @@ async function logout() {
   try {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     currentUser = null;
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
     showUnauthenticatedUI();
     resetDashboard();
     showToast('Logged out successfully', 'success');
@@ -349,17 +353,20 @@ function updateMeetings(events) {
     const color = isGoogle ? '#ea4335' : '#0078d4';
     
     return `
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-left: 4px solid ${color}; padding: 12px 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">${event.title || 'Busy'}</div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); display:flex; gap: 10px;">
-            <span>🕒 ${start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            <span>📅 ${start.toLocaleDateString()}</span>
-            ${event.location ? `<span>📍 ${event.location}</span>` : ''}
-          </div>
+      <div class="meeting-card ${isSystem ? 'system-gen' : ''}">
+        <div class="meeting-time-box">
+          <span class="m-date">${startDate}</span>
+          <span class="m-time">${startTime}</span>
         </div>
-        <div style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: ${color};">
-          ${event.identity?.providerEmail || 'Calendar'}
+        <div class="meeting-info">
+          <div class="meeting-title">${e.title}</div>
+          <div class="meeting-details">
+            <span class="provider-badge ${e.identity?.providerType?.toLowerCase().includes('google') ? 'google' : 'microsoft'}">
+              ${e.identity?.providerType?.toLowerCase().includes('google') ? 'G' : 'M'}
+            </span>
+            ${e.location ? `<span class="m-loc">📍 ${e.location}</span>` : ''}
+            ${isSystem ? '<span class="sync-badge">🛡️ Protected Block</span>' : '<span class="sync-badge">✅ Synced</span>'}
+          </div>
         </div>
       </div>
     `;
