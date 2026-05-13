@@ -192,22 +192,25 @@ function showUnauthenticatedUI() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
+  window.scrollTo(0, 0); // Reset scroll to top
 }
 
 async function logout() {
   try {
+    // Attempt to clear cookie on server
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch (error) {
+    console.error('Logout request failed:', error);
+  } finally {
+    // Always clear local state and show landing page
     currentUser = null;
     if (pollInterval) {
       clearInterval(pollInterval);
       pollInterval = null;
     }
-    showUnauthenticatedUI();
     resetDashboard();
+    showUnauthenticatedUI();
     showToast('Logged out successfully', 'success');
-    showAuthUI();
-  } catch {
-    showToast('Logout failed', 'error');
   }
 }
 
