@@ -156,10 +156,10 @@ export async function updateShadowBlock(identity, eventId, updates) {
 
   const patch = {};
   if (updates.startTime) {
-    patch.start = { dateTime: new Date(updates.startTime).toISOString() };
+    patch.start = { dateTime: new Date(updates.startTime).toISOString(), timeZone: updates.timeZone || 'UTC' };
   }
   if (updates.endTime) {
-    patch.end = { dateTime: new Date(updates.endTime).toISOString() };
+    patch.end = { dateTime: new Date(updates.endTime).toISOString(), timeZone: updates.timeZone || 'UTC' };
   }
   if (updates.title) {
     patch.summary = updates.title;

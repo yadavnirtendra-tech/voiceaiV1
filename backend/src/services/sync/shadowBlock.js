@@ -5,7 +5,7 @@
 import * as googleCal from '../google/calendar.service.js';
 import * as msCal from '../microsoft/calendar.service.js';
 import { GOOGLE_PROVIDERS, MICROSOFT_PROVIDERS, SHADOW_BLOCK_TITLE } from '../../utils/constants.js';
-import { identities, shadowBlocks, syncLogs } from '../../db/index.js';
+import { identities, shadowBlocks, syncLogs, users } from '../../db/index.js';
 import logger from '../../utils/logger.js';
 
 function getSyncDirection(src, tgt) {
@@ -20,6 +20,9 @@ function getSyncDirection(src, tgt) {
 export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
   const targets = await identities.findActiveByUserExcluding(userId, sourceIdentity.id);
   if (!targets.length) return [];
+  
+  const user = await users.findById(userId);
+  const userTimezone = user?.timezone || 'UTC';
 
   const results = [];
   for (const target of targets) {
@@ -33,7 +36,7 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
         description: `Synced from ${sourceIdentity.providerEmail} | ${sourceEvent.title}`,
         sourceEventId: sourceEvent.id,
         sourceProvider: sourceIdentity.providerType,
-        timeZone: 'UTC',
+        timeZone: userTimezone,
       };
 
       const existing = await shadowBlocks.findActiveBySourceAndTarget(sourceEvent.id, target.id);
@@ -42,7 +45,7 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
 
       if (block) {
         try {
-          await updateShadowBlock(block, target, sourceEvent);
+          await updateShadowBlock(block, target, sourceEvent, userTimezone);
         } catch (err) {
           const isDeleted = err.message?.includes('404') || err.code === 404 || err.code === 410 || err.message?.includes('not found');
           if (isDeleted) {
@@ -110,9 +113,9 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
   return results;
 }
 
-async function updateShadowBlock(block, target, event) {
+async function updateShadowBlock(block, target, event, userTimezone = 'UTC') {
   try {
-    const updates = { startTime: event.startTime, endTime: event.endTime };
+    const updates = { startTime: event.startTime, endTime: event.endTime, timeZone: userTimezone };
     if (GOOGLE_PROVIDERS.includes(target.providerType) && block.targetExternalId)
       await googleCal.updateShadowBlock(target, block.targetExternalId, updates);
     else if (MICROSOFT_PROVIDERS.includes(target.providerType) && block.targetExternalId)

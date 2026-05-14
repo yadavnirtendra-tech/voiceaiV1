@@ -6,6 +6,28 @@ import { getAccessToken } from './auth.service.js';
 import { SYSTEM_TAG_KEY, SYSTEM_TAG_VALUE, SHADOW_BLOCK_TITLE, MS_GRAPH_BASE_URL } from '../../utils/constants.js';
 import logger from '../../utils/logger.js';
 
+function formatDateTimeTz(dateStr, timeZone) {
+  const date = new Date(dateStr);
+  if (timeZone === 'UTC') return date.toISOString().replace('Z', '');
+  
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(date);
+  
+  const map = {};
+  for (const part of parts) map[part.type] = part.value;
+  if (map.hour === '24') map.hour = '00';
+  
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}.000`;
+}
+
 /**
  * Helper: Make an authenticated Microsoft Graph API call
  */
@@ -108,11 +130,11 @@ export async function createShadowBlock(identity, eventData) {
       content: eventData.description || 'This time slot has been reserved by OpenCalendar.',
     },
     start: {
-      dateTime: new Date(eventData.startTime).toISOString().replace('Z', ''),
+      dateTime: formatDateTimeTz(eventData.startTime, eventData.timeZone || 'UTC'),
       timeZone: eventData.timeZone || 'UTC',
     },
     end: {
-      dateTime: new Date(eventData.endTime).toISOString().replace('Z', ''),
+      dateTime: formatDateTimeTz(eventData.endTime, eventData.timeZone || 'UTC'),
       timeZone: eventData.timeZone || 'UTC',
     },
     // Mark as busy
@@ -166,10 +188,12 @@ export async function updateShadowBlock(identity, eventId, updates) {
   const patch = {};
   
   if (updates.startTime) {
-    patch.start = { dateTime: new Date(updates.startTime).toISOString().replace('Z', ''), timeZone: 'UTC' };
+    const tz = updates.timeZone || 'UTC';
+    patch.start = { dateTime: formatDateTimeTz(updates.startTime, tz), timeZone: tz };
   }
   if (updates.endTime) {
-    patch.end = { dateTime: new Date(updates.endTime).toISOString().replace('Z', ''), timeZone: 'UTC' };
+    const tz = updates.timeZone || 'UTC';
+    patch.end = { dateTime: formatDateTimeTz(updates.endTime, tz), timeZone: tz };
   }
   if (updates.title) {
     patch.subject = updates.title;
