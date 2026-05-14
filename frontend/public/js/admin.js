@@ -82,7 +82,7 @@ function renderUsers(users) {
 }
 
 async function togglePlan(userId, currentPlan) {
-  const newPlan = currentPlan === 'PRO' ? 'FREE' : 'PRO';
+  const newPlan = currentPlan === 'PRO' ? 'FREE_TRIAL' : 'PRO';
   try {
     const res = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
