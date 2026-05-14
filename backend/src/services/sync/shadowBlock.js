@@ -24,19 +24,6 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
   const results = [];
   for (const target of targets) {
     try {
-      const existing = await shadowBlocks.findActiveBySourceAndTarget(sourceEvent.id, target.id);
-      if (existing) {
-        const existStart = new Date(existing.startTime).getTime();
-        const existEnd = new Date(existing.endTime).getTime();
-        const srcStart = new Date(sourceEvent.startTime).getTime();
-        const srcEnd = new Date(sourceEvent.endTime).getTime();
-        if (existStart !== srcStart || existEnd !== srcEnd) {
-          await updateShadowBlock(existing, target, sourceEvent);
-        }
-        results.push(existing);
-        continue;
-      }
-
       const isGT = GOOGLE_PROVIDERS.includes(target.providerType);
       const isMT = MICROSOFT_PROVIDERS.includes(target.providerType);
       const data = {
@@ -49,22 +36,49 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
         timeZone: 'UTC',
       };
 
+      const existing = await shadowBlocks.findActiveBySourceAndTarget(sourceEvent.id, target.id);
+      if (existing) {
+        try {
+          // Always try to update to ensure it exists and is accurate
+          await updateShadowBlock(existing, target, sourceEvent);
+          results.push(existing);
+          continue;
+        } catch (err) {
+          const isDeleted = err.message?.includes('404') || err.code === 404 || err.code === 410 || err.message?.includes('deleted') || err.message?.includes('not found');
+          if (!isDeleted) {
+            throw err; // Bubble up unexpected errors
+          }
+          // If deleted, we recreate it below instead of continuing
+          logger.info('Shadow block was manually deleted, recreating...', { targetId: target.id });
+        }
+      }
+
       let ext;
       if (isGT) ext = await googleCal.createShadowBlock(target, data);
       else if (isMT) ext = await msCal.createShadowBlock(target, data);
       else continue;
 
-      const block = await shadowBlocks.create({
-        userId,
-        sourceEventId: sourceEvent.id,
-        sourceIdentityId: sourceIdentity.id,
-        targetIdentityId: target.id,
-        targetExternalId: ext.id,
-        title: SHADOW_BLOCK_TITLE,
-        startTime: sourceEvent.startTime,
-        endTime: sourceEvent.endTime,
-        status: 'ACTIVE',
-      });
+      let block;
+      if (existing) {
+        block = await shadowBlocks.update(existing.id, {
+          targetExternalId: ext.id,
+          startTime: sourceEvent.startTime,
+          endTime: sourceEvent.endTime,
+          status: 'ACTIVE'
+        });
+      } else {
+        block = await shadowBlocks.create({
+          userId,
+          sourceEventId: sourceEvent.id,
+          sourceIdentityId: sourceIdentity.id,
+          targetIdentityId: target.id,
+          targetExternalId: ext.id,
+          title: SHADOW_BLOCK_TITLE,
+          startTime: sourceEvent.startTime,
+          endTime: sourceEvent.endTime,
+          status: 'ACTIVE',
+        });
+      }
 
       await syncLogs.create({
         userId,
