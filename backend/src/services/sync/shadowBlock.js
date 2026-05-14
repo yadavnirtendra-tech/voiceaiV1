@@ -74,25 +74,25 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
       }
 
       if (block) {
-
-      await syncLogs.create({
-        userId,
-        identityId: target.id,
-        action: 'SHADOW_CREATED',
-        status: 'COMPLETED',
-        sourceEventId: sourceEvent.id,
-        targetEventId: block.id,
-        externalEventId: ext ? ext.id : (existing ? existing.targetExternalId : null),
-        providerType: target.providerType,
-        direction: getSyncDirection(sourceIdentity.providerType, target.providerType),
-        completedAt: new Date(),
-        metadata: { 
-          sourceEmail: sourceIdentity.providerEmail, 
-          targetEmail: target.providerEmail,
-          isUpdate: !!existing 
-        },
-      });
-      results.push(block);
+        await syncLogs.create({
+          userId,
+          identityId: target.id,
+          action: 'SHADOW_CREATED',
+          status: 'COMPLETED',
+          sourceEventId: sourceEvent.id,
+          targetEventId: block.id,
+          externalEventId: ext ? ext.id : (existing ? existing.targetExternalId : null),
+          providerType: target.providerType,
+          direction: getSyncDirection(sourceIdentity.providerType, target.providerType),
+          completedAt: new Date(),
+          metadata: { 
+            sourceEmail: sourceIdentity.providerEmail, 
+            targetEmail: target.providerEmail,
+            isUpdate: !!existing 
+          },
+        });
+        results.push(block);
+      }
     } catch (error) {
       logger.error('Shadow block creation failed', { targetId: target.id, error: error.message });
       await syncLogs.create({
