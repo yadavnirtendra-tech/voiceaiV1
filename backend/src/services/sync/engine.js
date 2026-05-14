@@ -91,8 +91,18 @@ async function processEvent(externalEvent, identity) {
 
   // Parse event data
   const isCancelled = isGoogle ? externalEvent.status === 'cancelled' : externalEvent['@removed'];
-  const startTime = isGoogle ? (externalEvent.start?.dateTime || externalEvent.start?.date) : externalEvent.start?.dateTime;
-  const endTime = isGoogle ? (externalEvent.end?.dateTime || externalEvent.end?.date) : externalEvent.end?.dateTime;
+  let startTime = isGoogle ? (externalEvent.start?.dateTime || externalEvent.start?.date) : externalEvent.start?.dateTime;
+  let endTime = isGoogle ? (externalEvent.end?.dateTime || externalEvent.end?.date) : externalEvent.end?.dateTime;
+
+  if (!isGoogle) {
+    if (startTime && !startTime.endsWith('Z') && externalEvent.start?.timeZone === 'UTC') {
+      startTime += 'Z';
+    }
+    if (endTime && !endTime.endsWith('Z') && externalEvent.end?.timeZone === 'UTC') {
+      endTime += 'Z';
+    }
+  }
+
   const title = isGoogle ? externalEvent.summary : externalEvent.subject;
   const busyStatus = isGoogle
     ? (externalEvent.transparency === 'transparent' ? 'FREE' : 'BUSY')

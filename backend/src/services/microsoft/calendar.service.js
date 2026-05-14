@@ -17,6 +17,7 @@ async function graphFetch(identity, endpoint, options = {}) {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Prefer': 'outlook.timezone="UTC"',
       ...options.headers,
     },
   });
@@ -107,11 +108,11 @@ export async function createShadowBlock(identity, eventData) {
       content: eventData.description || 'This time slot has been reserved by OpenCalendar.',
     },
     start: {
-      dateTime: new Date(eventData.startTime).toISOString(),
+      dateTime: new Date(eventData.startTime).toISOString().replace('Z', ''),
       timeZone: eventData.timeZone || 'UTC',
     },
     end: {
-      dateTime: new Date(eventData.endTime).toISOString(),
+      dateTime: new Date(eventData.endTime).toISOString().replace('Z', ''),
       timeZone: eventData.timeZone || 'UTC',
     },
     // Mark as busy
@@ -165,10 +166,10 @@ export async function updateShadowBlock(identity, eventId, updates) {
   const patch = {};
   
   if (updates.startTime) {
-    patch.start = { dateTime: new Date(updates.startTime).toISOString(), timeZone: 'UTC' };
+    patch.start = { dateTime: new Date(updates.startTime).toISOString().replace('Z', ''), timeZone: 'UTC' };
   }
   if (updates.endTime) {
-    patch.end = { dateTime: new Date(updates.endTime).toISOString(), timeZone: 'UTC' };
+    patch.end = { dateTime: new Date(updates.endTime).toISOString().replace('Z', ''), timeZone: 'UTC' };
   }
   if (updates.title) {
     patch.subject = updates.title;
