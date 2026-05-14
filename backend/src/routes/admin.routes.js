@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth.js';
 import { adminAuthenticate } from '../middleware/adminAuth.js';
 import { users, identities, syncLogs } from '../db/index.js';
 import prisma from '../db/prismaClient.js';
+import bcrypt from 'bcryptjs';
 import logger from '../utils/logger.js';
 
 const router = Router();
@@ -44,10 +45,25 @@ router.patch('/users/:id', async (req, res) => {
   }
 });
 
-/** POST /api/admin/users/:id/reset-password - Trigger reset */
+/** POST /api/admin/users/:id/reset-password - Force Reset to Temp Password */
 router.post('/users/:id/reset-password', async (req, res) => {
-  // In a real app, this would send an email. For now, we mock it.
-  res.json({ success: true, message: 'Password reset link sent to user email' });
+  try {
+    const tempPassword = 'OpenCalendar123!';
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    
+    await prisma.user.update({
+      where: { id: req.params.id },
+      data: { passwordHash }
+    });
+    
+    res.json({ 
+      success: true, 
+      message: `Password has been reset to: ${tempPassword}. Please tell the user to change it upon login.` 
+    });
+  } catch (error) {
+    logger.error('Admin password reset failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 /** GET /api/admin/stats - Global SaaS Stats */

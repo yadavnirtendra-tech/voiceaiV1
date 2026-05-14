@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Live Clock
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString();
+  }, 1000);
 });
 
 async function fetchAdminData() {
@@ -35,34 +41,48 @@ async function fetchAdminData() {
 
 function renderUsers(users) {
   const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = users.map(user => `
+  tbody.innerHTML = users.map(user => {
+    const isPro = user.plan === 'PRO';
+    const isAdmin = user.isAdmin;
+    
+    return `
     <tr>
       <td>
-        <div style="font-weight: 600;">${user.displayName || 'Unnamed'}</div>
-        <div style="font-size: 0.7rem; color: var(--text-muted);">${user.email}</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff;">
+            ${(user.displayName || user.email)[0].toUpperCase()}
+          </div>
+          <div>
+            <div style="font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+              ${user.displayName || 'Unnamed'}
+              ${isAdmin ? '<span class="badge badge-admin">SUPER ADMIN</span>' : ''}
+            </div>
+            <div style="font-size: 0.75rem; color: #64748b;">${user.email}</div>
+          </div>
+        </div>
       </td>
       <td>
-        <span class="badge ${user.plan === 'PRO' ? 'badge-pro' : 'badge-free'}">${user.plan}</span>
+        <span class="badge ${isPro ? 'badge-pro' : 'badge-free'}">${user.plan.replace('_', ' ')}</span>
       </td>
       <td>
-        <span style="font-size: 0.75rem;">${user.subscriptionStatus}</span>
+        <span style="font-size: 0.75rem; font-weight: 600; color: #94a3b8;">${user.subscriptionStatus}</span>
       </td>
-      <td>${user._count.identities} accounts</td>
-      <td style="font-size: 0.75rem;">${new Date(user.createdAt).toLocaleDateString()}</td>
+      <td style="font-weight: 600;">${user._count.identities} <span style="font-size:0.7rem; color:#64748b;">accounts</span></td>
+      <td style="font-size: 0.75rem; color: #94a3b8;">${new Date(user.createdAt).toLocaleDateString()}</td>
       <td>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-ghost btn-sm action-btn" onclick="togglePlan('${user.id}', '${user.plan}')">
-            ${user.plan === 'PRO' ? 'Downgrade' : 'Upgrade to Pro'}
+          <button class="btn-action" onclick="togglePlan('${user.id}', '${user.plan}')">
+            ${isPro ? '⚡ Make Free' : '💎 Upgrade to Pro'}
           </button>
-          <button class="btn btn-ghost btn-sm action-btn" onclick="resetPassword('${user.id}')">Reset Pass</button>
+          <button class="btn-action btn-danger-soft" onclick="resetPassword('${user.id}')">🔐 Reset</button>
         </div>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 async function togglePlan(userId, currentPlan) {
-  const newPlan = currentPlan === 'PRO' ? 'FREE_TRIAL' : 'PRO';
+  const newPlan = currentPlan === 'PRO' ? 'FREE' : 'PRO';
   try {
     const res = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
@@ -77,13 +97,18 @@ async function togglePlan(userId, currentPlan) {
 }
 
 async function resetPassword(userId) {
-  if (!confirm('Send password reset email to this user?')) return;
+  if (!confirm('Force reset this user\'s password to a temporary one?')) return;
   try {
     const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
       method: 'POST',
       credentials: 'include'
     });
-    if (res.ok) alert('Reset email triggered!');
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+    } else {
+      alert('Failed: ' + (data.error || 'Unknown error'));
+    }
   } catch (err) {
     alert('Failed to trigger reset');
   }

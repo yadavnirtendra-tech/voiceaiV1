@@ -2,19 +2,26 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function promote() {
-  const email = 'yadavnirtendra@gmail.com';
+async function updateAdmins() {
+  const newAdminEmail = 'nirtendrayadav12@gmail.com';
   try {
+    // 1. Remove admin status from everyone
+    await prisma.user.updateMany({
+      data: { isAdmin: false }
+    });
+    console.log('✅ All existing Super Admin privileges revoked.');
+
+    // 2. Promote the new admin
     const user = await prisma.user.update({
-      where: { email },
+      where: { email: newAdminEmail },
       data: { isAdmin: true, plan: 'PRO' }
     });
-    console.log(`✅ SUCCESS: ${user.email} is now a Super Admin (PRO Plan).`);
+    console.log(`✅ SUCCESS: ${user.email} is now the EXCLUSIVE Super Admin.`);
   } catch (error) {
-    console.error(`❌ FAILED: User with email ${email} not found. Please sign up first!`);
+    console.error(`❌ FAILED: User with email ${newAdminEmail} not found. Please sign up with this email first!`);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-promote();
+updateAdmins();
