@@ -155,7 +155,13 @@ router.get('/microsoft', authLimiter, authenticate, async (req, res) => {
 /** GET /api/auth/microsoft/callback */
 router.get('/microsoft/callback', async (req, res) => {
   try {
-    const { code, state } = req.query;
+    const { code, state, error, error_description } = req.query;
+    
+    if (error) {
+      logger.error('Microsoft OAuth error from Azure', { error, error_description });
+      return res.redirect(`${config.frontendUrl}?error=${encodeURIComponent(error_description || error)}`);
+    }
+
     if (!code || !state) return res.redirect(`${config.frontendUrl}?error=missing_params`);
 
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
