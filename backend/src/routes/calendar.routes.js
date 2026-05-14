@@ -7,7 +7,7 @@ import { authenticate } from '../middleware/auth.js';
 import { apiLimiter } from '../middleware/rateLimiter.js';
 import { getAvailability, isSlotAvailable } from '../services/availability/globalProfile.js';
 import { fullSync } from '../services/sync/engine.js';
-import { users, identities, calendarEvents, shadowBlocks, syncLogs } from '../db/index.js';
+import { users, identities, calendarEvents, shadowBlocks, syncLogs, webhookSubscriptions } from '../db/index.js';
 import logger from '../utils/logger.js';
 
 const router = Router();
@@ -76,6 +76,19 @@ router.get('/events', authenticate, apiLimiter, async (req, res) => {
   }
 });
 
+/** GET /api/calendar/search - Search events for Command Palette */
+router.get('/search', authenticate, apiLimiter, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json({ success: true, events: [] });
+    const events = await calendarEvents.search(req.user.id, q);
+    res.json({ success: true, events });
+  } catch (error) {
+    logger.error('Search failed', { error: error.message });
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 /** GET /api/calendar/shadow-blocks - Get active shadow blocks */
 router.get('/shadow-blocks', authenticate, apiLimiter, async (req, res) => {
   try {
@@ -83,6 +96,40 @@ router.get('/shadow-blocks', authenticate, apiLimiter, async (req, res) => {
     res.json({ success: true, blocks, count: blocks.length });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch shadow blocks' });
+  }
+});
+
+/** GET /api/calendar/webhooks/status - Get health of active webhooks */
+router.get('/webhooks/status', authenticate, apiLimiter, async (req, res) => {
+  try {
+    const userIdentities = await identities.findActiveByUser(req.user.id);
+    const health = [];
+
+    for (const identity of userIdentities) {
+      const subInfo = await webhookSubscriptions.findLatestByIdentity(identity.id);
+      
+      health.push({
+        identityId: identity.id,
+        email: identity.providerEmail,
+        provider: identity.providerType,
+        status: subInfo ? (new Date(subInfo.expiresAt) > new Date() ? 'HEALTHY' : 'EXPIRED') : 'NONE',
+        expiresAt: subInfo?.expiresAt || null,
+      });
+    }
+
+    res.json({ success: true, health });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch webhook status' });
+  }
+});
+
+/** POST /api/calendar/shadow-blocks/cleanup - Bulk delete all shadow blocks */
+router.post('/shadow-blocks/cleanup', authenticate, apiLimiter, async (req, res) => {
+  try {
+    const result = await shadowBlocks.deleteByUserId(req.user.id);
+    res.json({ success: true, message: `Deleted ${result.count} shadow blocks` });
+  } catch (error) {
+    res.status(500).json({ error: 'Cleanup failed' });
   }
 });
 

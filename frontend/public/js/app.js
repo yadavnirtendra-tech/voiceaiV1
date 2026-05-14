@@ -291,6 +291,7 @@ async function fetchDashboardData() {
         updateActivity(data.recentActivity || []);
         updateSyncStatus('System Online', 'emerald');
         updateLastUpdated();
+        fetchWebhookStatus();
       }
     }
     
@@ -463,7 +464,15 @@ function updateMeetings(events) {
       events: [],
       eventContent: function(arg) {
         let italicEl = document.createElement('div');
-        italicEl.innerHTML = arg.event.title;
+        const isSystem = arg.event.extendedProps?.isSystemGenerated;
+        
+        // Boss Mode Logic
+        if (isBossMode && !isSystem) {
+          italicEl.innerHTML = '<strong>Busy</strong>';
+        } else {
+          italicEl.innerHTML = arg.event.title;
+        }
+        
         italicEl.style.fontSize = '0.85em';
         italicEl.style.whiteSpace = 'normal';
         italicEl.style.overflow = 'hidden';
@@ -500,7 +509,8 @@ function updateMeetings(events) {
       end: event.endTime,
       backgroundColor: bgColor,
       borderColor: 'transparent',
-      textColor: textColor
+      textColor: textColor,
+      extendedProps: { isSystemGenerated: isSystem }
     };
   });
 
@@ -684,3 +694,122 @@ async function triggerSyncWithPipeline() {
   }
 }
 window.triggerSync = triggerSyncWithPipeline;
+
+// ---- Command Palette ----
+let paletteSearchTimeout;
+function handlePaletteSearch(q) {
+  clearTimeout(paletteSearchTimeout);
+  if (!q) return document.getElementById('paletteResults').innerHTML = '<div class="empty-state">Start typing to search...</div>';
+  
+  paletteSearchTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(`/api/calendar/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
+      const data = await res.json();
+      renderPaletteResults(data.events || []);
+    } catch (e) {
+      console.error('Search failed', e);
+    }
+  }, 300);
+}
+
+function renderPaletteResults(events) {
+  const container = document.getElementById('paletteResults');
+  if (!events.length) {
+    container.innerHTML = '<div class="empty-state">No matches found.</div>';
+    return;
+  }
+  
+  container.innerHTML = events.map(ev => `
+    <div class="palette-item" onclick="navigateToEvent('${ev.startTime}')">
+      <div class="palette-item-info">
+        <div class="palette-item-title">${ev.summary || '(No Title)'}</div>
+        <div class="palette-item-meta">${new Date(ev.startTime).toLocaleString()}</div>
+      </div>
+      <div class="palette-item-provider">${ev.identity?.providerType.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function openCommandPalette() {
+  document.getElementById('commandPalette').style.display = 'flex';
+  document.getElementById('paletteInput').focus();
+}
+
+function closeCommandPalette(e) {
+  if (e === 'esc' || e.target.id === 'commandPalette') {
+    document.getElementById('commandPalette').style.display = 'none';
+  }
+}
+
+function navigateToEvent(dateStr) {
+  if (fullCalendarInstance) {
+    fullCalendarInstance.gotoDate(dateStr);
+    fullCalendarInstance.changeView('timeGridDay');
+  }
+  closeCommandPalette('esc');
+}
+
+// ---- Boss Mode & Power Tools ----
+let isBossMode = false;
+function toggleBossMode() {
+  isBossMode = document.getElementById('bossModeToggle').checked;
+  if (fullCalendarInstance) {
+    fullCalendarInstance.refetchEvents(); // This will trigger re-rendering with new content logic
+  }
+  showToast(`Boss Mode ${isBossMode ? 'Enabled' : 'Disabled'}`, 'success');
+}
+
+async function purgeShadowBlocks() {
+  if (!confirm('This will delete all cross-calendar "Reserved" blocks. They will be recreated on the next sync. Proceed?')) return;
+  try {
+    const res = await fetch('/api/calendar/shadow-blocks/cleanup', { method: 'POST', credentials: 'include' });
+    const data = await res.json();
+    showToast(data.message || 'Shadow blocks purged', 'success');
+    fetchDashboardData();
+  } catch (e) {
+    showToast('Purge failed', 'error');
+  }
+}
+
+async function fetchWebhookStatus() {
+  const container = document.getElementById('webhookHealthList');
+  try {
+    const res = await fetch('/api/calendar/webhooks/status', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.health?.length) {
+      container.innerHTML = '<div class="empty-state" style="padding: 12px;"><p style="font-size:0.75rem;">No active webhooks.</p></div>';
+      return;
+    }
+    
+    container.innerHTML = data.health.map(h => `
+      <div class="webhook-item">
+        <div class="webhook-provider">
+          <span class="provider-badge ${h.provider.toLowerCase()}">${h.provider[0].toUpperCase()}</span>
+          <span>${h.email}</span>
+        </div>
+        <div class="health-indicator">
+          <span class="health-dot ${h.status}"></span>
+          <span style="color:var(--text-muted)">${h.status}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<p style="color:var(--accent-rose); font-size:0.75rem;">Error loading health.</p>';
+  }
+}
+
+// Hotkey listener
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openCommandPalette();
+  }
+  if (e.key === 'Escape') {
+    closeCommandPalette('esc');
+  }
+});
+
+// Update FullCalendar eventContent to respect Boss Mode
+const originalEventContent = fullCalendarInstance?.getOption('eventContent');
+// I will apply this in a separate chunk to avoid complexity
+

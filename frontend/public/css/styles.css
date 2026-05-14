@@ -1097,7 +1097,80 @@ select.form-control option { background: var(--bg-card-solid); color: var(--text
   text-decoration: underline !important;
 }
 
-/* Scrollbar newspaper */
-[data-theme="newspaper"] ::-webkit-scrollbar-thumb {
-  background: #8A8278;
+/* ---- Modal & Command Palette ---- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+  z-index: 2000; display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 100px;
 }
+.modal-content.command-palette {
+  width: 100%; max-width: 600px; background: var(--bg-card-solid);
+  border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5); overflow: hidden;
+  animation: modalScale 0.2s ease-out;
+}
+@keyframes modalScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.palette-input-wrapper {
+  display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.palette-search-icon { font-size: 1.2rem; opacity: 0.5; }
+.palette-input-wrapper input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-size: 1rem; font-family: inherit;
+}
+.palette-hint { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.palette-results { max-height: 400px; overflow-y: auto; padding: 8px 0; }
+.palette-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; cursor: pointer; transition: var(--transition);
+}
+.palette-item:hover { background: var(--bg-card-hover); }
+.palette-item-info { display: flex; flex-direction: column; gap: 2px; }
+.palette-item-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+.palette-item-meta { font-size: 0.72rem; color: var(--text-muted); }
+.palette-item-provider { font-size: 0.65rem; font-weight: 700; opacity: 0.6; }
+
+/* ---- Toggle Switch ---- */
+.switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--border-color); transition: .4s;
+}
+.slider:before {
+  position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px;
+  background-color: white; transition: .4s;
+}
+input:checked + .slider { background-color: var(--accent-indigo); }
+input:focus + .slider { box-shadow: 0 0 1px var(--accent-indigo); }
+input:checked + .slider:before { transform: translateX(16px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* ---- Webhook Status ---- */
+.webhook-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border-color);
+}
+.webhook-item:last-child { border-bottom: none; }
+.webhook-provider { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 500; }
+.health-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; }
+.health-dot { width: 8px; height: 8px; border-radius: 50%; }
+.health-dot.HEALTHY { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+.health-dot.EXPIRED { background: var(--accent-amber); }
+.health-dot.NONE { background: var(--text-muted); }
+
+/* Theme Overrides for Modal */
+[data-theme="newspaper"] .modal-content.command-palette { border: 3px double var(--border-color); box-shadow: 10px 10px 0 var(--border-color); }
+[data-theme="newspaper"] .palette-input-wrapper { border-bottom: 2px solid var(--border-color); }
+[data-theme="newspaper"] .palette-item { border-bottom: 1px dashed var(--border-color); }
+[data-theme="newspaper"] .slider:before { background-color: var(--bg-primary); border: 1px solid var(--border-color); }
+[data-theme="newspaper"] input:checked + .slider { background-color: var(--text-primary); }
+
+[data-theme="light"] .modal-content.command-palette { background: rgba(216,234,207,0.98); }
+

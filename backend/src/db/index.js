@@ -166,6 +166,22 @@ export const calendarEvents = {
       take: options.limit,
     });
   },
+  search(userId, query, limit = 10) {
+    return prisma.calendarEvent.findMany({
+      where: {
+        userId,
+        status: { not: 'CANCELLED' },
+        isSystemGenerated: false,
+        OR: [
+          { summary: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { startTime: 'desc' },
+      take: limit,
+      include: { identity: true },
+    });
+  },
   countByUser(userId, options = {}) {
     const where = { 
       userId,
@@ -243,6 +259,11 @@ export const shadowBlocks = {
       where: { userId, status: 'ACTIVE' },
     });
   },
+  deleteByUserId(userId) {
+    return prisma.shadowBlock.deleteMany({
+      where: { userId },
+    });
+  },
   cancelBySourceIdentity(sourceIdentityId) {
     return prisma.shadowBlock.updateMany({
       where: { sourceIdentityId, status: 'ACTIVE' },
@@ -318,6 +339,12 @@ export const webhookSubscriptions = {
     return prisma.webhookSubscription.updateMany({
       where: { identityId, isActive: true },
       data: { isActive: false },
+    });
+  },
+  findLatestByIdentity(identityId) {
+    return prisma.webhookSubscription.findFirst({
+      where: { identityId, isActive: true },
+      orderBy: { expiresAt: 'desc' },
     });
   },
 };
