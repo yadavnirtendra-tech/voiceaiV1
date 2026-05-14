@@ -444,3 +444,94 @@ body::before {
 }
 
 .m-loc { font-size: 0.8rem; color: var(--text-secondary); }
+
+/* ---- FullCalendar Custom Dark Theme ---- */
+.fc {
+  font-family: 'Inter', sans-serif !important;
+  color: var(--text-primary) !important;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: var(--border-color) !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary);
+}
+
+.fc .fc-button-primary {
+  background-color: var(--bg-card-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  text-transform: capitalize !important;
+  font-weight: 600 !important;
+  transition: var(--transition) !important;
+}
+
+.fc .fc-button-primary:hover {
+  background-color: var(--accent-indigo) !important;
+  border-color: var(--accent-indigo) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: var(--accent-indigo) !important;
+  border-color: var(--accent-indigo) !important;
+  color: #fff !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top-style: dashed !important;
+  border-color: rgba(99,102,241,0.05) !important;
+}
+
+.fc .fc-timegrid-slot {
+  height: 2em !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  padding: 12px 8px !important;
+}
+
+.fc-direction-ltr .fc-timegrid-slot-label-frame {
+  text-align: right;
+  color: var(--text-muted) !important;
+  font-size: 0.8rem !important;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-color: var(--accent-rose) !important;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: var(--accent-rose) !important;
+}
+
+.fc .fc-event {
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+  transition: var(--transition) !important;
+}
+
+.fc .fc-event:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  z-index: 10 !important;
+}
+
+.fc-timegrid-event-harness-inset .fc-timegrid-event, .fc-timegrid-event.fc-event-mirror, .fc-timegrid-more-link {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+

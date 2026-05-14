@@ -345,6 +345,9 @@ function updateAccounts(identities) {
   }).join('');
 }
 
+let currentActivityPage = 0;
+const ACTIVITY_PAGE_SIZE = 8;
+
 function updateActivity(logs) {
   const container = document.getElementById('activityFeed');
   if (!logs.length) {
@@ -352,7 +355,10 @@ function updateActivity(logs) {
     return;
   }
 
-  container.innerHTML = logs.slice(0, 8).map(log => {
+  const startIdx = currentActivityPage * ACTIVITY_PAGE_SIZE;
+  const pageLogs = logs.slice(startIdx, startIdx + ACTIVITY_PAGE_SIZE);
+
+  let html = pageLogs.map(log => {
     return `<div class="activity-item">
       <div class="activity-dot ${log.status === 'COMPLETED' ? 'created' : 'error'}"></div>
       <div class="activity-content">
@@ -361,7 +367,26 @@ function updateActivity(logs) {
       </div>
     </div>`;
   }).join('');
+
+  // Pagination controls
+  if (logs.length > ACTIVITY_PAGE_SIZE) {
+    html += `<div style="display:flex; justify-content:space-between; margin-top:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="changeActivityPage(-1, ${logs.length})" ${currentActivityPage === 0 ? 'disabled' : ''}>← Prev</button>
+      <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">Page ${currentActivityPage + 1}</span>
+      <button class="btn btn-ghost btn-sm" onclick="changeActivityPage(1, ${logs.length})" ${startIdx + ACTIVITY_PAGE_SIZE >= logs.length ? 'disabled' : ''}>Next →</button>
+    </div>`;
+  }
+
+  container.innerHTML = html;
 }
+
+window.changeActivityPage = function(delta, totalLength) {
+  currentActivityPage += delta;
+  if (currentActivityPage < 0) currentActivityPage = 0;
+  if (currentActivityPage * ACTIVITY_PAGE_SIZE >= totalLength) currentActivityPage--;
+  // Re-render activity using cached logs or triggering fetch
+  if (currentUser) fetchDashboardData();
+};
 
 
 function resetDashboard() {
@@ -485,6 +510,7 @@ async function refreshData() {
 
 // ---- Polling ----
 function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
   pollInterval = setInterval(() => {
     if (currentUser) fetchDashboardData();
   }, 30000);

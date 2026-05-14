@@ -150,7 +150,10 @@ export const calendarEvents = {
     return prisma.calendarEvent.findMany({ where });
   },
   findByUser(userId, options = {}) {
-    const where = { userId };
+    const where = { 
+      userId,
+      identity: { isActive: true }
+    };
     if (options.excludeCancelled) where.status = { not: 'CANCELLED' };
     if (options.status) where.status = options.status;
     if (options.excludeSystemGenerated) where.isSystemGenerated = false;
@@ -164,7 +167,10 @@ export const calendarEvents = {
     });
   },
   countByUser(userId, options = {}) {
-    const where = { userId };
+    const where = { 
+      userId,
+      identity: { isActive: true }
+    };
     if (options.status) where.status = options.status;
     return prisma.calendarEvent.count({ where });
   },
@@ -175,6 +181,7 @@ export const calendarEvents = {
     return prisma.calendarEvent.findMany({
       where: {
         userId,
+        identity: { isActive: true },
         status: 'CONFIRMED',
         busyStatus: { in: ['BUSY', 'OUT_OF_OFFICE'] },
         isSystemGenerated: false,
