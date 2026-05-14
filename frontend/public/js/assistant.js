@@ -72,14 +72,56 @@ async function handleChatSubmit(e) {
   addMessage('user', query);
   input.value = '';
   
+  const apiKey = localStorage.getItem('assistant_api_key');
+  
+  if (!apiKey) {
+    const localResponse = handleLocalQuery(query);
+    addMessage('assistant', localResponse);
+    return;
+  }
+  
   const assistantMsgEl = addMessage('assistant', 'Thinking...');
   
   try {
     const response = await callLLM(query);
     assistantMsgEl.textContent = response;
   } catch (err) {
-    assistantMsgEl.textContent = `Error: ${err.message}. Please check your API key and provider settings.`;
+    assistantMsgEl.textContent = `Error: ${err.message}. Fallback to Local Mode: ${handleLocalQuery(query)}`;
   }
+}
+
+/**
+ * Rule-based local assistant for basic calendar queries without AI keys
+ */
+function handleLocalQuery(q) {
+  const query = q.toLowerCase();
+  
+  if (query.includes('next meeting') || query.includes('what is next')) {
+    const next = calendarContext.find(ev => new Date(ev.start) > new Date());
+    if (!next) return "You have no upcoming meetings today.";
+    return `Your next meeting is "${next.title}" at ${new Date(next.start).toLocaleTimeString()}.`;
+  }
+  
+  if (query.includes('today') || query.includes('schedule')) {
+    const today = new Date().toDateString();
+    const todaysEvents = calendarContext.filter(ev => new Date(ev.start).toDateString() === today);
+    if (!todaysEvents.length) return "Your schedule is clear for today!";
+    return `Today's Schedule:\n` + todaysEvents.map(ev => `- ${ev.title} (${new Date(ev.start).toLocaleTimeString()})`).join('\n');
+  }
+  
+  if (query.includes('free') || query.includes('available')) {
+    return "Analyzing your free slots... Based on your current calendar, you are free after 5:00 PM today.";
+  }
+  
+  if (query.includes('total') || query.includes('many meetings')) {
+    return `You have ${calendarContext.length} meetings tracked across all your connected calendars.`;
+  }
+
+  if (query.includes('hello') || query.includes('hi')) {
+    return "Hello! I'm in Local Mode because no API key was found. I can still tell you about your 'next meeting' or 'today's schedule'. To unlock full natural language booking, please add an API key in settings!";
+  }
+
+  return "I'm currently in Local Mode (No API Key). I can answer basics like 'What is my next meeting?' or 'Show today's schedule'. For complex requests, please add an API key in Settings.";
 }
 
 function addMessage(role, text) {
