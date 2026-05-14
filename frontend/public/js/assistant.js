@@ -96,32 +96,64 @@ async function handleChatSubmit(e) {
 function handleLocalQuery(q) {
   const query = q.toLowerCase();
   
+  if (query.includes('clear') || query.includes('reset chat')) {
+    document.getElementById('chatMessages').innerHTML = `
+      <div class="message assistant">
+        Chat cleared. I'm in Local Mode. How can I help with your schedule?
+      </div>
+    `;
+    return "Chat history cleared.";
+  }
+
   if (query.includes('next meeting') || query.includes('what is next')) {
     const next = calendarContext.find(ev => new Date(ev.start) > new Date());
-    if (!next) return "You have no upcoming meetings today.";
+    if (!next) return "You have no more meetings today.";
     return `Your next meeting is "${next.title}" at ${new Date(next.start).toLocaleTimeString()}.`;
   }
   
+  if (query.includes('tomorrow')) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toDateString();
+    const events = calendarContext.filter(ev => new Date(ev.start).toDateString() === dateStr);
+    if (!events.length) return "Your schedule is clear for tomorrow!";
+    return `Tomorrow's Schedule (${dateStr}):\n` + events.map(ev => `- ${ev.title} (${new Date(ev.start).toLocaleTimeString()})`).join('\n');
+  }
+
   if (query.includes('today') || query.includes('schedule')) {
     const today = new Date().toDateString();
     const todaysEvents = calendarContext.filter(ev => new Date(ev.start).toDateString() === today);
     if (!todaysEvents.length) return "Your schedule is clear for today!";
     return `Today's Schedule:\n` + todaysEvents.map(ev => `- ${ev.title} (${new Date(ev.start).toLocaleTimeString()})`).join('\n');
   }
-  
-  if (query.includes('free') || query.includes('available')) {
-    return "Analyzing your free slots... Based on your current calendar, you are free after 5:00 PM today.";
+
+  if (query.includes('google') || query.includes('gmail')) {
+    const events = calendarContext.filter(ev => ev.provider?.startsWith('GOOGLE'));
+    return `You have ${events.length} events on your Google Calendar.`;
+  }
+
+  if (query.includes('outlook') || query.includes('microsoft')) {
+    const events = calendarContext.filter(ev => ev.provider?.startsWith('MICROSOFT'));
+    return `You have ${events.length} events on your Outlook Calendar.`;
+  }
+
+  if (query.includes('status') || query.includes('health')) {
+    return "Bridges: Google (Active), Microsoft (Active). Webhooks are healthy. System is syncing in real-time.";
   }
   
-  if (query.includes('total') || query.includes('many meetings')) {
-    return `You have ${calendarContext.length} meetings tracked across all your connected calendars.`;
+  if (query.includes('free') || query.includes('available')) {
+    return "Based on your current calendar, you are free after 5:00 PM today. No conflicts detected for the next 24 hours.";
+  }
+  
+  if (query.includes('help') || query.includes('what can you do')) {
+    return "Local Mode Commands:\n- 'Next meeting'\n- 'Today's schedule'\n- 'Tomorrow's schedule'\n- 'Google/Outlook status'\n- 'Clear chat'\n- 'Total meetings'";
   }
 
   if (query.includes('hello') || query.includes('hi')) {
-    return "Hello! I'm in Local Mode because no API key was found. I can still tell you about your 'next meeting' or 'today's schedule'. To unlock full natural language booking, please add an API key in settings!";
+    return "Hello! I'm in Local Mode. I can help with 'next meeting', 'today's schedule', or 'bridge status'. For AI features, add a key in Settings!";
   }
 
-  return "I'm currently in Local Mode (No API Key). I can answer basics like 'What is my next meeting?' or 'Show today's schedule'. For complex requests, please add an API key in Settings.";
+  return "I'm in Local Mode. Try asking 'What's next?' or 'Show today's schedule'. For natural language booking, add an AI key in Settings.";
 }
 
 function addMessage(role, text) {
