@@ -25,7 +25,7 @@ function escapeHtml(str) {
 
 // ---- Theme ----
 const THEMES = ['dark', 'light', 'newspaper'];
-const THEME_ICONS = { dark: '🌙 Dark', light: '☀️ Light', newspaper: '📰 Gazette' };
+const THEME_ICONS = { dark: '🌙 Dark', light: '🌿 Green', newspaper: '📰 Gazette' };
 
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
