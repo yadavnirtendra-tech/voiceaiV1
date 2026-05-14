@@ -176,7 +176,7 @@ async function processEvent(externalEvent, identity) {
   
   if (results.length > 0) {
     await syncLogs.create({
-      userId: identity.userId, identityId: identity.id, action: 'EVENT_SYNCED', status: 'COMPLETED',
+      userId: identity.userId, identityId: identity.id, action: 'EVENT_CREATED', status: 'COMPLETED',
       externalEventId: eventId, providerType: identity.providerType, completedAt: new Date(),
       metadata: { shadowBlocksCreated: results.length }
     });
