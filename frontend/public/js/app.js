@@ -415,17 +415,21 @@ function updateMeetings(events) {
   const upcoming = events.filter(e => new Date(e.endTime) >= now)
     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
+  const userTz = document.getElementById('timezoneSelect').value || 'local';
+
   if (!fullCalendarInstance) {
     fullCalendarInstance = new FullCalendar.Calendar(container, {
+      timeZone: userTz === 'UTC' ? 'UTC' : userTz, // Handle FullCalendar named timezones natively
       initialView: 'timeGridWeek',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'timeGridWeek,timeGridDay,dayGridMonth'
       },
-      height: 600,
-      slotMinTime: '06:00:00',
-      slotMaxTime: '22:00:00',
+      height: 800, // taller to zoom out the slots vertically
+      slotMinTime: '00:00:00', // whole day view
+      slotMaxTime: '24:00:00',
+      slotDuration: '00:30:00',
       allDaySlot: true,
       events: [],
       eventContent: function(arg) {
@@ -564,8 +568,10 @@ async function updateTimezone(timezone) {
       credentials: 'include'
     });
     const data = await res.json();
-    if (data.success) {
       showToast(`Timezone updated to ${timezone}`, 'success');
+      if (fullCalendarInstance) {
+        fullCalendarInstance.setOption('timeZone', timezone === 'UTC' ? 'UTC' : timezone);
+      }
     }
   } catch (error) {
     showToast('Failed to update timezone', 'error');
