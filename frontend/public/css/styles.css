@@ -4,6 +4,7 @@
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
 /* ---- Design Tokens ---- */
 :root {
@@ -420,11 +421,13 @@ body::before {
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-group label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
 .form-control {
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+  background: var(--bg-card-solid); border: 1px solid var(--border-color);
   border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text-primary);
   font-size: 0.85rem; transition: var(--transition); font-family: inherit;
 }
 .form-control:focus { outline: none; border-color: var(--accent-indigo); background: rgba(255,255,255,0.05); }
+select.form-control { background-color: var(--bg-card-solid); color: var(--text-primary); }
+select.form-control option { background: var(--bg-card-solid); color: var(--text-primary); padding: 8px; }
 
 /* ---- FullCalendar Dark Theme ---- */
 .fc { font-family: 'Inter', sans-serif !important; color: var(--text-primary) !important; }
@@ -445,7 +448,10 @@ body::before {
 }
 .fc-theme-standard .fc-scrollgrid { border-color: var(--border-color) !important; border-radius: var(--radius-md) !important; overflow: hidden !important; }
 .fc .fc-timegrid-slot-minor { border-top-style: dashed !important; border-color: rgba(255,255,255,0.02) !important; }
-.fc .fc-timegrid-slot { height: 2em !important; }
+.fc .fc-timegrid-slot { height: 1.5em !important; }
+.fc .fc-view-harness { min-height: 520px !important; }
+.fc .fc-toolbar { margin-bottom: 12px !important; }
+.fc .fc-toolbar .fc-button { padding: 4px 10px !important; font-size: 0.72rem !important; }
 .fc .fc-col-header-cell-cushion { color: var(--text-secondary) !important; font-weight: 600 !important; font-size: 0.78rem !important; }
 .fc-direction-ltr .fc-timegrid-slot-label-frame { text-align: right; color: var(--text-muted) !important; font-size: 0.72rem !important; font-variant-numeric: tabular-nums; }
 .fc .fc-timegrid-now-indicator-line { border-color: var(--accent-rose) !important; }
@@ -490,3 +496,453 @@ body::before {
 }
 .meeting-card.system-gen { border-left: 3px solid var(--accent-emerald); }
 .meeting-card.system-gen .sync-badge { background: rgba(245,158,11,0.08); color: var(--accent-amber); }
+
+/* ============================================
+   NEWSPAPER THEME — "The OpenCalendar Gazette"
+   1920s Broadsheet Aesthetic
+   ============================================ */
+
+[data-theme="newspaper"] {
+  --bg-primary: #F4F1EA;
+  --bg-secondary: #EDE8DD;
+  --bg-card: rgba(244, 241, 234, 0.95);
+  --bg-card-solid: #F4F1EA;
+  --bg-card-hover: #EDE8DD;
+  --bg-glass: rgba(244, 241, 234, 0.8);
+  --border-color: #2D2926;
+  --border-hover: #2D2926;
+  --border-glow: #8B0000;
+  --text-primary: #2D2926;
+  --text-secondary: #4A4540;
+  --text-muted: #8A8278;
+  --accent-indigo: #2D2926;
+  --accent-violet: #4A4540;
+  --accent-cyan: #2D2926;
+  --accent-emerald: #2D5016;
+  --accent-amber: #8B4513;
+  --accent-rose: #8B0000;
+  --gradient-primary: linear-gradient(135deg, #2D2926, #4A4540);
+  --gradient-glow: none;
+  --gradient-mesh: none;
+  --shadow-card: none;
+  --shadow-glow: none;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+[data-theme="newspaper"] body {
+  font-family: 'Libre Baskerville', 'Georgia', serif;
+  filter: contrast(1.1) sepia(0.15);
+  background-image: radial-gradient(ellipse at center, transparent 60%, rgba(139,115,85,0.08) 100%);
+}
+
+[data-theme="newspaper"] body::before {
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+/* Masthead */
+[data-theme="newspaper"] .navbar {
+  background: #F4F1EA;
+  backdrop-filter: none;
+  border-bottom: 4px double #2D2926;
+  padding: 8px 28px;
+}
+
+[data-theme="newspaper"] .navbar-brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 1rem;
+  background: none;
+  -webkit-text-fill-color: #2D2926;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-theme="newspaper"] .navbar-status {
+  background: transparent;
+  border: 1px solid #2D2926;
+  color: #2D2926;
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
+  border-radius: 0;
+}
+
+[data-theme="newspaper"] .status-dot {
+  background: #2D5016;
+  animation: none;
+  box-shadow: none;
+}
+
+/* Hero */
+[data-theme="newspaper"] .hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.8rem;
+  background: none;
+  -webkit-text-fill-color: #2D2926;
+  letter-spacing: -0.01em;
+  border-bottom: 3px double #2D2926;
+  padding-bottom: 12px;
+  display: inline-block;
+}
+
+[data-theme="newspaper"] .hero p {
+  font-family: 'Libre Baskerville', serif;
+  font-style: italic;
+  color: #4A4540;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+/* Cards — Newspaper column style */
+[data-theme="newspaper"] .card {
+  background: transparent;
+  border: 2px solid #2D2926;
+  backdrop-filter: none;
+  border-radius: 0;
+}
+
+[data-theme="newspaper"] .card:hover {
+  border-color: #8B0000;
+}
+
+[data-theme="newspaper"] .card-header {
+  border-bottom: 2px solid #2D2926;
+  background: transparent;
+}
+
+[data-theme="newspaper"] .card-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+/* Stats — Classified style */
+[data-theme="newspaper"] .stat-card {
+  background: transparent;
+  border: 1px solid #2D2926;
+  border-radius: 0;
+}
+
+[data-theme="newspaper"] .stat-card::after { display: none; }
+
+[data-theme="newspaper"] .stat-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #8B0000;
+}
+
+[data-theme="newspaper"] .stat-value {
+  font-family: 'Playfair Display', serif;
+  color: #2D2926;
+}
+
+[data-theme="newspaper"] .stat-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+}
+
+[data-theme="newspaper"] .stat-icon {
+  background: transparent !important;
+  border: 1px dashed #2D2926;
+  border-radius: 0;
+}
+
+/* Pipeline — Vintage stamps */
+[data-theme="newspaper"] .pipeline-visualizer {
+  background: transparent;
+  border: 1px dashed #8A8278;
+}
+
+[data-theme="newspaper"] .pipeline-icon {
+  border-radius: 0;
+  border: 2px solid #2D2926;
+  background: #F4F1EA;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+}
+
+[data-theme="newspaper"] .pipeline-icon.active {
+  background: #2D2926;
+  color: #F4F1EA;
+  box-shadow: none;
+  animation: none;
+}
+
+[data-theme="newspaper"] .pipeline-icon.done {
+  background: transparent;
+  border-color: #2D5016;
+  color: #2D5016;
+}
+
+[data-theme="newspaper"] .pipeline-connector {
+  background: #2D2926;
+  height: 1px;
+  border-top: 1px dashed #2D2926;
+}
+
+[data-theme="newspaper"] .pipeline-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+}
+
+/* Buttons — Newspaper */
+[data-theme="newspaper"] .btn {
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+
+[data-theme="newspaper"] .btn-primary {
+  background: #2D2926;
+  color: #F4F1EA;
+  box-shadow: none;
+}
+
+[data-theme="newspaper"] .btn-primary:hover {
+  background: #8B0000;
+  transform: none;
+  box-shadow: none;
+}
+
+[data-theme="newspaper"] .btn-ghost {
+  border: 1px solid #2D2926;
+  color: #2D2926;
+}
+
+[data-theme="newspaper"] .btn-ghost:hover {
+  background: #2D2926;
+  color: #F4F1EA;
+}
+
+/* Connect cards */
+[data-theme="newspaper"] .connect-card {
+  border: 2px solid #2D2926;
+  border-radius: 0;
+  backdrop-filter: none;
+  background: transparent;
+}
+
+[data-theme="newspaper"] .connect-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #8B0000;
+}
+
+[data-theme="newspaper"] .connect-card .provider-name {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+[data-theme="newspaper"] .connect-card .provider-desc {
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
+}
+
+[data-theme="newspaper"] .connect-card .provider-icon {
+  border-radius: 0;
+  border: 1px dashed #2D2926;
+  background: transparent !important;
+}
+
+/* State machine */
+[data-theme="newspaper"] .state-machine {
+  background: transparent;
+  border: 1px dashed #8A8278;
+}
+
+[data-theme="newspaper"] .state-node {
+  border-radius: 0;
+  border: 1px solid #2D2926;
+  background: transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  color: #2D2926;
+}
+
+[data-theme="newspaper"] .state-node.active {
+  background: #2D2926;
+  color: #F4F1EA;
+  box-shadow: none;
+}
+
+/* Activity feed */
+[data-theme="newspaper"] .activity-item {
+  border-bottom: 1px dashed #8A8278;
+}
+
+[data-theme="newspaper"] .activity-text {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 0.75rem;
+}
+
+[data-theme="newspaper"] .activity-time {
+  font-family: 'Courier New', monospace;
+}
+
+[data-theme="newspaper"] .activity-dot {
+  box-shadow: none;
+}
+
+/* Identity items */
+[data-theme="newspaper"] .identity-item {
+  border-bottom: 1px dashed #8A8278;
+}
+
+[data-theme="newspaper"] .identity-email {
+  font-family: 'Playfair Display', serif;
+}
+
+[data-theme="newspaper"] .identity-meta {
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+}
+
+[data-theme="newspaper"] .identity-icon {
+  border-radius: 0;
+  border: 1px solid #2D2926;
+  background: transparent !important;
+}
+
+[data-theme="newspaper"] .realtime-badge {
+  border-radius: 0;
+  background: transparent;
+  border: 1px solid #2D2926;
+  color: #2D2926;
+  font-family: 'Courier New', monospace;
+}
+
+/* Toast */
+[data-theme="newspaper"] .toast {
+  background: #F4F1EA;
+  border: 2px solid #2D2926;
+  border-radius: 0;
+  backdrop-filter: none;
+  font-family: 'Courier New', monospace;
+  box-shadow: 3px 3px 0 #2D2926;
+}
+
+/* Form controls */
+[data-theme="newspaper"] .form-control {
+  background: #F4F1EA;
+  border: 1px solid #2D2926;
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  color: #2D2926;
+}
+
+[data-theme="newspaper"] select.form-control option {
+  background: #F4F1EA;
+  color: #2D2926;
+}
+
+/* FullCalendar Newspaper */
+[data-theme="newspaper"] .fc .fc-toolbar-title {
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="newspaper"] .fc .fc-button-primary {
+  background-color: transparent !important;
+  border-color: #2D2926 !important;
+  color: #2D2926 !important;
+  border-radius: 0 !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.7rem !important;
+}
+
+[data-theme="newspaper"] .fc .fc-button-primary:hover,
+[data-theme="newspaper"] .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #2D2926 !important;
+  color: #F4F1EA !important;
+}
+
+[data-theme="newspaper"] .fc-theme-standard td,
+[data-theme="newspaper"] .fc-theme-standard th {
+  border-color: #2D2926 !important;
+}
+
+[data-theme="newspaper"] .fc .fc-col-header-cell-cushion {
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 700 !important;
+  color: #2D2926 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="newspaper"] .fc-direction-ltr .fc-timegrid-slot-label-frame {
+  font-family: 'Courier New', monospace !important;
+  color: #4A4540 !important;
+}
+
+[data-theme="newspaper"] .fc .fc-timegrid-now-indicator-line {
+  border-color: #8B0000 !important;
+  border-width: 2px !important;
+}
+
+[data-theme="newspaper"] .fc .fc-event {
+  border-radius: 0 !important;
+  box-shadow: 1px 1px 0 #2D2926 !important;
+  font-family: 'Libre Baskerville', serif !important;
+}
+
+[data-theme="newspaper"] .fc-theme-standard .fc-scrollgrid {
+  border-radius: 0 !important;
+  border: 2px solid #2D2926 !important;
+}
+
+/* Newspaper breaking news ticker */
+[data-theme="newspaper"] .breaking-ticker {
+  display: block !important;
+}
+
+.breaking-ticker {
+  display: none;
+  overflow: hidden;
+  border-top: 2px solid #2D2926;
+  border-bottom: 2px solid #2D2926;
+  padding: 6px 0;
+  background: #EDE8DD;
+  position: relative;
+}
+
+.ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerScroll 30s linear infinite;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #2D2926;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Footer newspaper */
+[data-theme="newspaper"] footer {
+  border-top: 4px double #2D2926 !important;
+  font-family: 'Courier New', monospace;
+}
+
+[data-theme="newspaper"] footer a {
+  color: #2D2926 !important;
+  text-decoration: underline !important;
+}
+
+/* Scrollbar newspaper */
+[data-theme="newspaper"] ::-webkit-scrollbar-thumb {
+  background: #8A8278;
+}

@@ -24,16 +24,41 @@ function escapeHtml(str) {
 }
 
 // ---- Theme ----
+const THEMES = ['dark', 'light', 'newspaper'];
+const THEME_ICONS = { dark: '🌙 Dark', light: '☀️ Light', newspaper: '📰 Gazette' };
+
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButton(savedTheme);
+  applyThemeEffects(savedTheme);
 }
 
 function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const idx = THEMES.indexOf(current);
+  const next = THEMES[(idx + 1) % THEMES.length];
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeButton(next);
+  applyThemeEffects(next);
+}
+
+function updateThemeButton(theme) {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = THEME_ICONS[theme] || '🌓';
+}
+
+function applyThemeEffects(theme) {
+  const heroTitle = document.getElementById('heroTitle');
+  const heroSub = document.getElementById('heroSubtitle');
+  if (theme === 'newspaper') {
+    if (heroTitle) heroTitle.textContent = 'THE OPENCALENDAR GAZETTE';
+    if (heroSub) heroSub.textContent = 'Vol. I — No. 01 | ' + new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' | Real-Time Intelligence';
+  } else {
+    if (heroTitle) heroTitle.textContent = 'Unified Calendar Intelligence';
+    if (heroSub) heroSub.textContent = 'Real-time cross-platform calendar synchronization. Your single source of truth for availability.';
+  }
 }
 window.toggleTheme = toggleTheme;
 
@@ -419,18 +444,21 @@ function updateMeetings(events) {
 
   if (!fullCalendarInstance) {
     fullCalendarInstance = new FullCalendar.Calendar(container, {
-      timeZone: userTz === 'UTC' ? 'UTC' : userTz, // Handle FullCalendar named timezones natively
+      timeZone: userTz === 'UTC' ? 'UTC' : userTz,
       initialView: 'timeGridWeek',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'timeGridWeek,timeGridDay,dayGridMonth'
       },
-      height: 800, // taller to zoom out the slots vertically
-      slotMinTime: '00:00:00', // whole day view
-      slotMaxTime: '24:00:00',
+      height: 'auto',
+      contentHeight: 560,
+      slotMinTime: '06:00:00',
+      slotMaxTime: '22:00:00',
       slotDuration: '00:30:00',
-      allDaySlot: true,
+      expandRows: true,
+      allDaySlot: false,
+      nowIndicator: true,
       events: [],
       eventContent: function(arg) {
         let italicEl = document.createElement('div');
