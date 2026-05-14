@@ -366,12 +366,17 @@ function updateActivity(logs) {
 
 function resetDashboard() {
   ['statCalendars','statEvents','statShadows','statSyncs'].forEach(id => {
-    document.getElementById(id).textContent = '0';
+    const el = document.getElementById(id);
+    if (el) el.textContent = '0';
   });
-  document.getElementById('accountsList').innerHTML = '<div class="empty-state"><div class="empty-icon">🔌</div><p>No calendars connected.</p></div>';
-  document.getElementById('activityFeed').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No activity yet.</p></div>';
-  document.getElementById('meetingsList').innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No meetings found or calendars not connected.</p></div>';
-  document.getElementById('statusText').textContent = 'System Ready';
+  const accountsList = document.getElementById('accountsList');
+  if (accountsList) accountsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🔌</div><p>No calendars connected.</p></div>';
+  const activityFeed = document.getElementById('activityFeed');
+  if (activityFeed) activityFeed.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No activity yet.</p></div>';
+  const meetingsList = document.getElementById('meetingsList');
+  if (meetingsList) meetingsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No meetings found or calendars not connected.</p></div>';
+  const syncStatus = document.getElementById('syncStatus');
+  if (syncStatus) syncStatus.textContent = 'System Ready';
 }
 
 function updateMeetings(events) {
