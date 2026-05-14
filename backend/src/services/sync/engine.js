@@ -18,23 +18,21 @@ import logger from '../../utils/logger.js';
 export async function processWebhook(identityId, providerPayload) {
   let state = SYNC_STATES.WEBHOOK_RECEIVED;
 
-  const logEntry = await syncLogs.create({
-    userId: '', // Will be set after identity lookup
-    identityId,
-    action: 'WEBHOOK_RECEIVED',
-    status: 'PROCESSING',
-    metadata: { payload: providerPayload },
-  });
-
+  let logEntry;
   try {
     // Fetch the identity with user info
     const identity = await identities.findByIdWithUser(identityId);
     if (!identity || !identity.isActive) {
-      await updateLog(logEntry.id, 'SKIPPED', 'Identity not found or inactive');
       return;
     }
 
-    await syncLogs.update(logEntry.id, { userId: identity.userId });
+    logEntry = await syncLogs.create({
+      userId: identity.userId,
+      identityId,
+      action: 'WEBHOOK_RECEIVED',
+      status: 'PROCESSING',
+      metadata: { payload: providerPayload },
+    });
 
     // Fetch changed events from the provider
     state = SYNC_STATES.FETCH_EVENT;
@@ -189,7 +187,7 @@ export async function fullSync(userId) {
         }
       }
       for (const event of events) {
-        await processEvent(identity, event.id, event);
+        await processEvent(event, identity);
       }
     } catch (error) {
       logger.error('Full sync error for identity', { identityId: identity.id, error: error.message });
