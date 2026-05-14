@@ -601,3 +601,57 @@ function animateStateMachine(activeState) {
   const target = document.getElementById(activeState);
   if (target) target.classList.add('active');
 }
+
+// ---- Pipeline Visualizer Animation ----
+function animatePipeline() {
+  const stages = ['pipeWebhook','pipeFetch','pipeGuard','pipeUpsert','pipeConflict','pipeShadow'];
+  const connectors = ['connWebhook','connFetch','connGuard','connUpsert','connConflict'];
+
+  // Reset all
+  stages.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active','done'); el.textContent = stages.indexOf(id) + 1; }
+  });
+  connectors.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+
+  // Stagger through stages
+  stages.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // Mark previous as done
+      if (i > 0) {
+        const prev = document.getElementById(stages[i-1]);
+        if (prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.textContent = '✓'; }
+        const conn = document.getElementById(connectors[i-1]);
+        if (conn) conn.classList.add('active');
+      }
+      el.classList.add('active');
+      // Final stage
+      if (i === stages.length - 1) {
+        setTimeout(() => {
+          el.classList.remove('active'); el.classList.add('done'); el.textContent = '✓';
+        }, 400);
+      }
+    }, i * 350);
+  });
+}
+
+// Run pipeline animation on sync
+const originalTriggerSync = triggerSync;
+// Override to add visual pipeline
+async function triggerSyncWithPipeline() {
+  if (!currentUser) return showToast('Please connect a calendar first', 'error');
+  try {
+    showToast('Sync started...', 'success');
+    animatePipeline();
+    await fetch('/api/calendar/sync', { method: 'POST', credentials: 'include' });
+    setTimeout(fetchDashboardData, 2000);
+  } catch {
+    showToast('Sync failed', 'error');
+  }
+}
+window.triggerSync = triggerSyncWithPipeline;

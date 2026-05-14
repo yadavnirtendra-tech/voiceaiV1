@@ -1,69 +1,64 @@
-<!-- Verified Deployment: 2026-05-13T23:51:00Z -->
+<!-- Verified Deployment: 2026-05-14T21:10:00Z -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="OpenCalendar - The Professional Unified Calendar Sync Engine. Connect Google and Microsoft calendars for a single source of truth.">
+  <meta name="description" content="OpenCalendar — The Professional Unified Calendar Sync Engine. Connect Google and Microsoft calendars for a single source of truth.">
   <title>OpenCalendar — Unified Calendar Sync Engine</title>
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="icon" href="img/logo.png">
 </head>
 <body>
-  <!-- Initial Loading State -->
+  <!-- Loading Overlay -->
   <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
     <img src="img/logo.png" alt="OpenCalendar" style="width:64px; height:64px; border-radius:12px; margin-bottom: 20px;">
     <div class="spinner"></div>
-    <p style="color:var(--text-secondary); font-size:0.9rem;">Initializing OpenCalendar...</p>
+    <p style="color:var(--text-secondary); font-size:0.85rem;">Initializing OpenCalendar...</p>
   </div>
 
-  <!-- Public Landing Page - VISIBLE BY DEFAULT FOR GOOGLE VERIFICATION -->
+  <!-- ========== LANDING PAGE ========== -->
   <div id="landingPage" style="display:block;">
-    <!-- Hero Section -->
-    <header style="padding: 100px 20px; text-align: center; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);">
-      <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Intelligence</h1>
-      <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
+    <header style="padding: 100px 20px; text-align: center; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.12) 0%, transparent 70%);">
+      <h1 style="font-size: 3.2rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.03em; background: linear-gradient(135deg, #FAFAFA, #6366F1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Intelligence</h1>
+      <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 640px; margin: 0 auto 40px; line-height: 1.7;">
         OpenCalendar is a professional synchronization engine that creates a "Single Source of Truth" across your Google and Microsoft calendars. Protect your availability automatically.
       </p>
-      <div style="display: flex; justify-content: center; gap: 20px;">
-        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})" style="padding: 14px 32px; font-size: 1rem;">Get Started Free</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" style="padding: 14px 32px; font-size: 1rem;">Learn More</button>
+      <div style="display: flex; justify-content: center; gap: 16px;">
+        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Get Started Free</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Learn More</button>
       </div>
     </header>
 
-    <!-- Features Section -->
-    <section id="features" style="padding: 80px 20px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-      <div class="card" style="padding: 30px; text-align: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 20px;">🔄</div>
-        <h3>Real-Time Sync</h3>
-        <p style="color: var(--text-secondary);">Bidirectional synchronization between Google Workspace and Microsoft 365 in under 30 seconds.</p>
+    <section id="features" style="padding: 80px 20px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+      <div class="card" style="padding: 28px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 16px;">🔄</div>
+        <h3 style="margin-bottom: 8px;">Real-Time Sync</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Bidirectional synchronization between Google Workspace and Microsoft 365 in under 10 seconds.</p>
       </div>
-      <div class="card" style="padding: 30px; text-align: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 20px;">🛡️</div>
-        <h3>Shadow Blocking</h3>
-        <p style="color: var(--text-secondary);">Automatically reserve time on all accounts when you are booked on one. Prevent double-bookings forever.</p>
+      <div class="card" style="padding: 28px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 16px;">🛡️</div>
+        <h3 style="margin-bottom: 8px;">Shadow Blocking</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Automatically reserve time on all accounts when you are booked on one. Prevent double-bookings forever.</p>
       </div>
-      <div class="card" style="padding: 30px; text-align: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 20px;">🔐</div>
-        <h3>Enterprise Security</h3>
-        <p style="color: var(--text-secondary);">Your data is AES-256 encrypted. We never store meeting content, only time slots and metadata.</p>
+      <div class="card" style="padding: 28px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 16px;">🔐</div>
+        <h3 style="margin-bottom: 8px;">Enterprise Security</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Your data is AES-256 encrypted. We never store meeting content, only time slots and metadata.</p>
       </div>
     </section>
 
-    <!-- Auth Section (Integrated into Landing) -->
     <div id="authSectionAnchor" style="padding: 80px 20px; text-align: center;">
-      <div id="authSection" style="display:none; text-align: left; vertical-align: middle; background:var(--bg-card); border-radius:var(--radius-xl); border: 1px solid var(--border-color); padding: 40px; max-width: 450px; width: 100%; box-shadow: var(--shadow-card); margin: 0 auto;">
+      <div id="authSection" style="display:none; text-align: left; background:var(--bg-card-solid); border-radius:var(--radius-xl); border: 1px solid var(--border-color); padding: 36px; max-width: 420px; width: 100%; box-shadow: var(--shadow-card); margin: 0 auto; backdrop-filter: blur(12px);">
         <div style="text-align:center; margin-bottom: 24px;">
-          <img src="img/logo.png" alt="Logo" style="width:56px; height:56px; border-radius:12px; margin-bottom: 12px;">
-          <h2 style="font-size:1.5rem; font-weight:800;">OpenCalendar Login</h2>
-          <p style="font-size:0.88rem; color:var(--text-secondary); margin-top:4px;">Log in to access your unified calendar</p>
+          <img src="img/logo.png" alt="Logo" style="width:48px; height:48px; border-radius:12px; margin-bottom: 12px;">
+          <h2 style="font-size:1.4rem; font-weight:800; letter-spacing:-0.02em;">OpenCalendar Login</h2>
+          <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:4px;">Log in to access your unified calendar</p>
         </div>
-
         <div class="auth-tabs">
           <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
           <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</div>
         </div>
-
         <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
           <div class="form-group">
             <label for="loginEmail">Email Address</label>
@@ -75,7 +70,6 @@
           </div>
           <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
         </form>
-
         <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
           <div class="form-group">
             <label for="regName">Display Name</label>
@@ -93,38 +87,42 @@
         </form>
       </div>
     </div>
-    </div>
   </div>
 
-  <!-- Dashboard Section (Hidden by default) -->
+  <!-- ========== DASHBOARD ========== -->
   <div class="app-container" id="app" style="display:none;">
 
     <!-- Navbar -->
     <nav class="navbar" id="navbar">
       <a href="/" class="navbar-brand" style="display: flex; align-items: center; gap: 10px;">
-        <img src="img/logo.png" alt="Logo" style="width:28px; height:28px; border-radius:6px;">
+        <img src="img/logo.png" alt="Logo" style="width:26px; height:26px; border-radius:6px;">
         OpenCalendar
       </a>
       <div class="navbar-status">
         <div class="status-dot"></div>
         <span id="syncStatus">System Online</span>
-        <span style="margin: 0 8px; opacity: 0.2;">|</span>
-        <span id="liveClock" style="font-family: monospace; font-weight: 600; min-width: 80px;">--:--:--</span>
-        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" style="margin-left: 15px; padding: 4px 8px; border-radius: 50%;">🌓</button>
+        <span style="margin: 0 6px; opacity: 0.2;">|</span>
+        <span id="liveClock" style="font-variant-numeric: tabular-nums; font-weight: 600; min-width: 70px; font-size: 0.75rem;">--:--:--</span>
       </div>
-      <div class="navbar-datetime" id="currentDateTime" style="font-size:0.85rem; color:var(--text-secondary); margin-right: 15px;">
-        --
-      </div>
+      <div class="navbar-datetime" id="currentDateTime" style="font-size:0.78rem; color:var(--text-muted);"></div>
       <div class="navbar-actions">
-        <select id="timezoneSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.8rem; margin-right: 15px;" onchange="updateTimezone(this.value)">
+        <select id="timezoneSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.72rem;" onchange="updateTimezone(this.value)">
           <option value="UTC">UTC</option>
           <option value="America/New_York">New York (EST)</option>
           <option value="Europe/London">London (GMT)</option>
           <option value="Asia/Dubai">Dubai (GST)</option>
           <option value="Asia/Kolkata">Mumbai (IST)</option>
           <option value="Asia/Singapore">Singapore (SGT)</option>
-          <option value="Australia/Sydney">Sydney (AEST)</option>
+          <option value="Asia/Kuala_Lumpur">Malaysia (MYT)</option>
+          <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+          <option value="Australia/Melbourne">Melbourne (AEST/AEDT)</option>
+          <option value="Australia/Brisbane">Brisbane (AEST)</option>
+          <option value="Australia/Adelaide">Adelaide (ACST/ACDT)</option>
+          <option value="Australia/Perth">Perth (AWST)</option>
+          <option value="Australia/Hobart">Hobart (AEST/AEDT)</option>
+          <option value="Australia/Darwin">Darwin (ACST)</option>
         </select>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme">🌓</button>
         <div class="navbar-user" id="userInfo" style="display:none;">
           <div class="user-avatar" id="userAvatar">U</div>
           <span id="userEmail"></span>
@@ -133,13 +131,12 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="main-content">
 
       <!-- Hero -->
       <section class="hero" id="heroSection">
         <h1>Unified Calendar Intelligence</h1>
-        <p>Real-time cross-platform calendar synchronization. Connect Google &amp; Outlook calendars to maintain a single source of truth for your availability.</p>
+        <p>Real-time cross-platform calendar synchronization. Your single source of truth for availability.</p>
       </section>
 
       <!-- Stats Grid -->
@@ -157,7 +154,7 @@
         <div class="stat-card">
           <div class="stat-icon emerald">🛡️</div>
           <div class="stat-value" id="statShadows">0</div>
-          <div class="stat-label">Active Shadow Blocks</div>
+          <div class="stat-label">Shadow Blocks</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon amber">⚡</div>
@@ -166,17 +163,61 @@
         </div>
       </section>
 
+      <!-- Sync Pipeline Visualizer -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+          <span class="card-title">⚙️ Sync Pipeline</span>
+          <span class="realtime-badge">REAL-TIME</span>
+        </div>
+        <div class="card-body">
+          <div class="pipeline-visualizer" id="pipelineVisualizer">
+            <div class="pipeline-stage">
+              <div class="pipeline-icon active" id="pipeWebhook">1</div>
+              <div class="pipeline-label">Webhook</div>
+            </div>
+            <div class="pipeline-connector" id="connWebhook"></div>
+            <div class="pipeline-stage">
+              <div class="pipeline-icon" id="pipeFetch">2</div>
+              <div class="pipeline-label">Fetch</div>
+            </div>
+            <div class="pipeline-connector" id="connFetch"></div>
+            <div class="pipeline-stage">
+              <div class="pipeline-icon" id="pipeGuard">3</div>
+              <div class="pipeline-label">Loop Guard</div>
+            </div>
+            <div class="pipeline-connector" id="connGuard"></div>
+            <div class="pipeline-stage">
+              <div class="pipeline-icon" id="pipeUpsert">4</div>
+              <div class="pipeline-label">DB Upsert</div>
+            </div>
+            <div class="pipeline-connector" id="connUpsert"></div>
+            <div class="pipeline-stage">
+              <div class="pipeline-icon" id="pipeConflict">5</div>
+              <div class="pipeline-label">Conflict</div>
+            </div>
+            <div class="pipeline-connector" id="connConflict"></div>
+            <div class="pipeline-stage">
+              <div class="pipeline-icon" id="pipeShadow">6</div>
+              <div class="pipeline-label">Shadow Block</div>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:0.72rem; color:var(--text-muted);">
+            Events flow through 6 stages: Webhook intake → Delta fetch → Loop prevention → Database upsert → Conflict resolution → Shadow block broadcast.
+          </p>
+        </div>
+      </div>
+
       <!-- Connect Section -->
       <section class="connect-section" id="connectSection">
-        <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px;">Connect Your Calendars</h2>
-        <p style="color:var(--text-secondary);font-size:0.88rem;">One-click OAuth — no Client IDs or secrets needed. The system manages everything.</p>
+        <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:4px; letter-spacing:-0.01em;">Connect Your Calendars</h2>
+        <p style="color:var(--text-secondary); font-size:0.82rem;">One-click OAuth — no Client IDs or secrets needed.</p>
         <div class="connect-grid">
           <a href="/api/auth/google" class="connect-card google" id="connectGoogle">
             <div class="provider-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
             </div>
             <div class="provider-name">Google Calendar</div>
-            <div class="provider-desc">Personal (@gmail.com) &amp; Workspace (@company.com)</div>
+            <div class="provider-desc">Personal &amp; Workspace accounts</div>
             <span class="btn btn-primary btn-sm">Connect Google</span>
           </a>
           <a href="/api/auth/microsoft" class="connect-card microsoft" id="connectMicrosoft">
@@ -184,7 +225,7 @@
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="10" height="10" fill="#F25022"/><rect x="13" y="1" width="10" height="10" fill="#7FBA00"/><rect x="1" y="13" width="10" height="10" fill="#00A4EF"/><rect x="13" y="13" width="10" height="10" fill="#FFB900"/></svg>
             </div>
             <div class="provider-name">Microsoft Outlook</div>
-            <div class="provider-desc">Personal (@outlook.com) &amp; Microsoft 365 (@enterprise.com)</div>
+            <div class="provider-desc">Personal &amp; Microsoft 365 accounts</div>
             <span class="btn btn-primary btn-sm">Connect Outlook</span>
           </a>
         </div>
@@ -192,25 +233,24 @@
 
       <!-- Two Column Grid -->
       <div class="section-grid">
-
-        <!-- Connected Accounts -->
+        <!-- Active Bridges (Connected Accounts) -->
         <div class="card" id="accountsCard">
           <div class="card-header">
-            <span class="card-title">🔗 Connected Accounts</span>
+            <span class="card-title">🔗 Active Bridges</span>
             <button class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Refresh</button>
           </div>
           <div class="card-body" id="accountsList">
             <div class="empty-state">
               <div class="empty-icon">🔌</div>
-              <p>No calendars connected yet.<br>Connect Google or Outlook above to get started.</p>
+              <p>No calendars connected yet.<br>Connect Google or Outlook above.</p>
             </div>
           </div>
         </div>
 
-        <!-- Sync Activity -->
+        <!-- Activity Feed -->
         <div class="card" id="activityCard">
           <div class="card-header">
-            <span class="card-title">⚡ Recent Sync Activity</span>
+            <span class="card-title">⚡ Activity Feed</span>
             <button class="btn btn-ghost btn-sm" onclick="triggerSync()">🔄 Sync Now</button>
           </div>
           <div class="card-body" id="activityFeed">
@@ -222,70 +262,67 @@
         </div>
       </div>
 
-      <!-- Meetings List -->
-      <div class="card" style="margin-top:24px;" id="meetingsCard">
+      <!-- Calendar View -->
+      <div class="card" style="margin-top:16px;" id="meetingsCard">
         <div class="card-header">
-          <span class="card-title">📅 All Unified Meetings</span>
-          <span style="font-size:0.75rem;color:var(--text-muted);">Upcoming events across all connected accounts</span>
+          <span class="card-title">📅 Unified Calendar View</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.65rem; color:var(--text-muted);">Striped = Shadow Blocks</span>
+            <span id="lastUpdated" style="font-size: 0.65rem; color: var(--text-muted);">Never synced</span>
+          </div>
         </div>
         <div class="card-body">
           <div id="calendar"></div>
         </div>
       </div>
 
-      <!-- State Machine Visualization -->
-      <div class="card" style="margin-top:24px;">
-        <div class="card-header">
-          <span class="card-title">🔧 Sync State Machine</span>
-          <span style="font-size:0.75rem;color:var(--text-muted);">Real-time pipeline status</span>
-        </div>
-        <div class="card-body">
-          <div class="state-machine" id="stateMachine">
-            <span class="state-node active" id="stateIdle">IDLE</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateWebhook">WEBHOOK</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateLoopCheck">LOOP CHECK</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateFetch">FETCH</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateConflict">CONFLICT</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateShadow">SHADOW BLOCK</span>
-            <span class="state-arrow">→</span>
-            <span class="state-node" id="stateSync">SYNC LOG</span>
+      <!-- State Machine + Architecture Info -->
+      <div class="section-grid" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔧 State Machine</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">Pipeline status</span>
           </div>
-          <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
-            When a webhook fires, events flow through the state machine: Loop Guard prevents infinite recursion,
-            Conflict Checker detects overlaps, and Shadow Blocks are broadcast to all other connected providers.
-          </p>
+          <div class="card-body">
+            <div class="state-machine" id="stateMachine">
+              <span class="state-node active" id="stateIdle">IDLE</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateWebhook">WEBHOOK</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateLoopCheck">LOOP CHECK</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateFetch">FETCH</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateConflict">CONFLICT</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateShadow">SHADOW</span>
+              <span class="state-arrow">→</span>
+              <span class="state-node" id="stateSync">DONE</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Architecture Info -->
-      <div class="card" style="margin-top:24px;">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="card-icon">📜</span> Recent Activity
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📡 Architecture</span>
           </div>
-          <span id="lastUpdated" style="font-size: 0.7rem; color: var(--text-muted);">Never updated</span>
-        </div>
-        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
-          <div>
-            <h4 style="font-size:0.85rem;color:var(--accent-indigo);margin-bottom:8px;">🔐 Zero-Friction Auth</h4>
-            <p style="font-size:0.78rem;color:var(--text-secondary);">Unified OAuth 2.0 flow. AES-256-GCM encrypted token storage with automatic refresh rotation.</p>
-          </div>
-          <div>
-            <h4 style="font-size:0.85rem;color:var(--accent-cyan);margin-bottom:8px;">📡 Webhook Listeners</h4>
-            <p style="font-size:0.78rem;color:var(--text-secondary);">Google Push Notifications + Microsoft Delta Queries. Sub-second sync latency instead of polling.</p>
-          </div>
-          <div>
-            <h4 style="font-size:0.85rem;color:var(--accent-emerald);margin-bottom:8px;">🛡️ Shadow Blocking</h4>
-            <p style="font-size:0.78rem;color:var(--text-secondary);">Automatic "Reserved" events injected across providers with infinite loop prevention via metadata tags.</p>
-          </div>
-          <div>
-            <h4 style="font-size:0.85rem;color:var(--accent-amber);margin-bottom:8px;">⚡ Conflict Resolution</h4>
-            <p style="font-size:0.78rem;color:var(--text-secondary);">Configurable strategies: Block All, Priority-Based, or Manual. Global availability truth across all calendars.</p>
+          <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div>
+              <h4 style="font-size:0.78rem; color:var(--accent-indigo); margin-bottom:6px;">🔐 Zero-Friction Auth</h4>
+              <p style="font-size:0.72rem; color:var(--text-secondary);">Unified OAuth 2.0 flow. AES-256-GCM encrypted tokens.</p>
+            </div>
+            <div>
+              <h4 style="font-size:0.78rem; color:var(--accent-cyan); margin-bottom:6px;">📡 Webhooks</h4>
+              <p style="font-size:0.72rem; color:var(--text-secondary);">Google Push + Microsoft Delta. Sub-second latency.</p>
+            </div>
+            <div>
+              <h4 style="font-size:0.78rem; color:var(--accent-emerald); margin-bottom:6px;">🛡️ Shadow Blocking</h4>
+              <p style="font-size:0.72rem; color:var(--text-secondary);">Auto "Reserved" events with infinite loop prevention.</p>
+            </div>
+            <div>
+              <h4 style="font-size:0.78rem; color:var(--accent-amber); margin-bottom:6px;">⚡ Conflict Resolution</h4>
+              <p style="font-size:0.72rem; color:var(--text-secondary);">Block All, Priority, or Manual strategies.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -293,15 +330,15 @@
     </main>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Toast -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <footer style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-color); margin-top: 60px;">
+  <footer style="text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 0.78rem; border-top: 1px solid var(--border-color); margin-top: 40px;">
     <p>&copy; 2026 OpenCalendar. All rights reserved.</p>
-    <div style="margin-top: 10px; display: flex; justify-content: center; gap: 20px;">
-      <a href="privacy.html" style="color: var(--text-muted); text-decoration: none; transition: var(--transition);">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--text-muted); text-decoration: none; transition: var(--transition);">Terms of Service</a>
-      <a href="mailto:support@opencalender.site" style="color: var(--text-muted); text-decoration: none; transition: var(--transition);">Support</a>
+    <div style="margin-top: 8px; display: flex; justify-content: center; gap: 20px;">
+      <a href="privacy.html" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
+      <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
+      <a href="mailto:support@opencalender.site" style="color: var(--text-muted); text-decoration: none;">Support</a>
     </div>
   </footer>
 
