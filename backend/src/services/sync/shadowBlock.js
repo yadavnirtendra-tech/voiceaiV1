@@ -1,6 +1,6 @@
 /**
  * Shadow Block Service - Creates/updates/deletes blocker events across providers
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import * as googleCal from '../google/calendar.service.js';
 import * as msCal from '../microsoft/calendar.service.js';

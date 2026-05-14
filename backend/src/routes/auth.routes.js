@@ -4,6 +4,7 @@
  * Uses Prisma/PostgreSQL for all database operations
  */
 import { Router } from 'express';
+import crypto from 'crypto';
 import { authenticate, generateToken, optionalAuth } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import * as googleAuth from '../services/google/auth.service.js';
@@ -18,6 +19,46 @@ import logger from '../utils/logger.js';
 
 const router = Router();
 
+// ============ Validation Helpers ============
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+const MIN_PASSWORD_LENGTH = 8;
+
+function sanitizeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[<>"'&]/g, (char) => {
+    const map = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+    return map[char];
+  });
+}
+
+function validateRegistration(email, password, displayName) {
+  const errors = [];
+  if (!email || !password) errors.push('Email and password are required');
+  if (email && !EMAIL_REGEX.test(email)) errors.push('Invalid email format');
+  if (password && password.length < MIN_PASSWORD_LENGTH) errors.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+  if (password && !/[A-Z]/.test(password)) errors.push('Password must contain at least one uppercase letter');
+  if (password && !/[0-9]/.test(password)) errors.push('Password must contain at least one number');
+  return errors;
+}
+
+/** Generate HMAC-signed OAuth state to prevent CSRF */
+function createSignedState(data) {
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64');
+  const signature = crypto.createHmac('sha256', config.jwt.secret).update(payload).digest('hex');
+  return `${payload}.${signature}`;
+}
+
+/** Verify and parse HMAC-signed OAuth state */
+function verifySignedState(state) {
+  const [payload, signature] = state.split('.');
+  if (!payload || !signature) return null;
+  const expected = crypto.createHmac('sha256', config.jwt.secret).update(payload).digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))) return null;
+  try {
+    return JSON.parse(Buffer.from(payload, 'base64').toString());
+  } catch { return null; }
+}
+
 // ============ Traditional Auth ============
 
 /** POST /api/auth/register - Create new account */
@@ -25,20 +66,24 @@ router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, password, displayName } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    const validationErrors = validateRegistration(email, password, displayName);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors[0], details: validationErrors });
     }
 
-    const existingUser = await users.findByEmail(email);
+    const normalizedEmail = email.toLowerCase().trim();
+    const safeName = sanitizeHtml((displayName || normalizedEmail.split('@')[0]).trim());
+
+    const existingUser = await users.findByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const user = await users.create({
-      email,
+      email: normalizedEmail,
       passwordHash,
-      displayName: displayName || email.split('@')[0],
+      displayName: safeName,
     });
 
     const token = generateToken(user.id);
@@ -51,8 +96,8 @@ router.post('/register', authLimiter, async (req, res) => {
 
     res.status(201).json({ success: true, user: { id: user.id, email: user.email, displayName: user.displayName } });
   } catch (error) {
-    logger.error('Registration failed details', { error: error.message, stack: error.stack, body: req.body });
-    res.status(500).json({ error: 'Registration failed. Please ensure the database is initialized correctly.' });
+    logger.error('Registration failed', { error: error.message, stack: error.stack, email: req.body?.email });
+    res.status(500).json({ error: 'Registration failed. Please try again later.' });
   }
 });
 
@@ -65,7 +110,12 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const user = await users.findByEmail(email);
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await users.findByEmail(normalizedEmail);
     if (!user || !user.passwordHash) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -99,7 +149,8 @@ router.post('/login', authLimiter, async (req, res) => {
 router.get('/google', authLimiter, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const authUrl = googleAuth.getAuthUrl(userId);
+    const state = createSignedState({ userId, provider: 'google', timestamp: Date.now() });
+    const authUrl = googleAuth.getAuthUrl(state);
     res.redirect(authUrl);
   } catch (error) {
     logger.error('Google auth init failed', { error: error.message });
@@ -113,7 +164,17 @@ router.get('/google/callback', async (req, res) => {
     const { code, state } = req.query;
     if (!code || !state) return res.redirect(`${config.frontendUrl}?error=missing_params`);
 
-    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    const stateData = verifySignedState(state);
+    if (!stateData || !stateData.userId) {
+      logger.warn('Google callback: invalid or tampered state parameter');
+      return res.redirect(`${config.frontendUrl}?error=invalid_state`);
+    }
+
+    // Reject states older than 10 minutes
+    if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
+      return res.redirect(`${config.frontendUrl}?error=state_expired`);
+    }
+
     const identity = await googleAuth.handleCallback(code, stateData.userId);
 
     // Update user email if it was a temp placeholder
@@ -144,7 +205,8 @@ router.get('/google/callback', async (req, res) => {
 router.get('/microsoft', authLimiter, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const authUrl = await msAuth.getAuthUrl(userId);
+    const state = createSignedState({ userId, provider: 'microsoft', timestamp: Date.now() });
+    const authUrl = await msAuth.getAuthUrl(state);
     res.redirect(authUrl);
   } catch (error) {
     logger.error('Microsoft auth init failed', { error: error.message });
@@ -164,7 +226,17 @@ router.get('/microsoft/callback', async (req, res) => {
 
     if (!code || !state) return res.redirect(`${config.frontendUrl}?error=missing_params`);
 
-    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    const stateData = verifySignedState(state);
+    if (!stateData || !stateData.userId) {
+      logger.warn('Microsoft callback: invalid or tampered state parameter');
+      return res.redirect(`${config.frontendUrl}?error=invalid_state`);
+    }
+
+    // Reject states older than 10 minutes
+    if (Date.now() - stateData.timestamp > 10 * 60 * 1000) {
+      return res.redirect(`${config.frontendUrl}?error=state_expired`);
+    }
+
     const identity = await msAuth.handleCallback(code, stateData.userId);
 
     const user = await users.findById(stateData.userId);
@@ -179,8 +251,8 @@ router.get('/microsoft/callback', async (req, res) => {
     res.cookie('auth_token', token, { httpOnly: true, secure: config.nodeEnv === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
     res.redirect(`${config.frontendUrl}?connected=microsoft&success=true`);
   } catch (error) {
-    logger.error('Microsoft callback failed', { error: error.message });
-    res.redirect(`${config.frontendUrl}?error=callback_failed`);
+    logger.error('Microsoft callback failed', { error: error.message, stack: error.stack });
+    res.redirect(`${config.frontendUrl}?error=${encodeURIComponent('Connection failed. Please try again.')}`);
   }
 });
 

@@ -1,7 +1,7 @@
 /**
  * JWT Authentication Middleware
  * Validates JWT tokens from cookies or Authorization header
- * Uses Firestore for user lookups
+ * Uses Prisma/PostgreSQL for user lookups
  */
 import jwt from 'jsonwebtoken';
 import config from '../config/env.js';

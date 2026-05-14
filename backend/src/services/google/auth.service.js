@@ -1,7 +1,7 @@
 /**
  * Google OAuth 2.0 Authentication Service
  * Handles authorization flow, token exchange, and token refresh
- * Uses Firestore for identity storage
+ * Uses Prisma/PostgreSQL for identity storage
  */
 import { google } from 'googleapis';
 import config from '../../config/env.js';
@@ -22,17 +22,11 @@ export function createOAuth2Client() {
 
 /**
  * Generate the Google authorization URL
- * @param {string} userId - The user ID to include in state
+ * @param {string} state - HMAC-signed state parameter for CSRF protection
  * @returns {string} Authorization URL
  */
-export function getAuthUrl(userId) {
+export function getAuthUrl(state) {
   const oauth2Client = createOAuth2Client();
-  
-  const state = Buffer.from(JSON.stringify({
-    userId,
-    provider: 'google',
-    timestamp: Date.now(),
-  })).toString('base64');
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -65,34 +59,38 @@ export async function handleCallback(code, userId) {
   const isWorkspace = !email.endsWith('@gmail.com') && !email.endsWith('@googlemail.com');
   const providerType = isWorkspace ? 'GOOGLE_WORKSPACE' : 'GOOGLE_PERSONAL';
 
-  // Encrypt tokens
+  // Encrypt tokens — each gets its own IV for AES-256-GCM security
   const accessTokenData = encrypt(tokens.access_token);
-  const refreshTokenData = tokens.refresh_token ? encrypt(tokens.refresh_token) : { encrypted: '', iv: '' };
+  // Store refresh token as "iv:ciphertext" so it carries its own IV
+  const refreshTokenData = tokens.refresh_token ? encrypt(tokens.refresh_token) : null;
+  const refreshTokenCombined = refreshTokenData
+    ? `${refreshTokenData.iv}:${refreshTokenData.encrypted}`
+    : '';
 
   // Get the primary calendar ID
   const calendarService = google.calendar({ version: 'v3', auth: oauth2Client });
   const { data: calendarList } = await calendarService.calendarList.list();
   const primaryCalendar = calendarList.items.find(c => c.primary) || calendarList.items[0];
 
-  // Upsert identity in Firestore
+  // Upsert identity in database
   const identity = await identities.upsert(
     userId, providerType, email,
     // Create data
     {
       providerAccountId: userInfo.id,
       accessTokenEnc: accessTokenData.encrypted,
-      refreshTokenEnc: refreshTokenData.encrypted,
+      refreshTokenEnc: refreshTokenCombined,
       tokenIv: accessTokenData.iv,
-      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       calendarId: primaryCalendar?.id || 'primary',
       calendarName: primaryCalendar?.summary || 'Primary Calendar',
     },
     // Update data
     {
       accessTokenEnc: accessTokenData.encrypted,
-      refreshTokenEnc: refreshTokenData.encrypted || undefined,
+      refreshTokenEnc: refreshTokenCombined || undefined,
       tokenIv: accessTokenData.iv,
-      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       isActive: true,
       calendarId: primaryCalendar?.id || 'primary',
       calendarName: primaryCalendar?.summary || 'Primary Calendar',
@@ -119,7 +117,18 @@ export async function getAuthenticatedClient(identity) {
   const oauth2Client = createOAuth2Client();
   
   const accessToken = decrypt(identity.accessTokenEnc, identity.tokenIv);
-  const refreshToken = identity.refreshTokenEnc ? decrypt(identity.refreshTokenEnc, identity.tokenIv) : null;
+  
+  // Refresh token stores its own IV as "iv:ciphertext"
+  let refreshToken = null;
+  if (identity.refreshTokenEnc) {
+    const parts = identity.refreshTokenEnc.split(':');
+    if (parts.length === 2) {
+      refreshToken = decrypt(parts[1], parts[0]);
+    } else {
+      // Legacy format: try with access token IV as fallback
+      refreshToken = decrypt(identity.refreshTokenEnc, identity.tokenIv);
+    }
+  }
 
   oauth2Client.setCredentials({
     access_token: accessToken,
@@ -141,12 +150,12 @@ export async function getAuthenticatedClient(identity) {
       const updateData = {
         accessTokenEnc: newAccessTokenData.encrypted,
         tokenIv: newAccessTokenData.iv,
-        tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+        tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date) : null,
       };
 
       if (credentials.refresh_token) {
         const newRefreshData = encrypt(credentials.refresh_token);
-        updateData.refreshTokenEnc = newRefreshData.encrypted;
+        updateData.refreshTokenEnc = `${newRefreshData.iv}:${newRefreshData.encrypted}`;
       }
 
       await identities.update(identity.id, updateData);

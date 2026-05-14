@@ -1,6 +1,6 @@
 /**
  * Calendar & User API Routes
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';

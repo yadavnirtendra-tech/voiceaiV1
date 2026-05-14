@@ -1,7 +1,14 @@
 node_modules/
 .env
+.env.local
+.env.production
 dist/
 *.log
+logs/
 .prisma/
 prisma/migrations/
 data/
+*.db
+*.db-shm
+*.db-wal
+.vercel/

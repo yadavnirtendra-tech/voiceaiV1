@@ -8,7 +8,7 @@
  * When an event on Google overlaps with an event on Outlook,
  * this service detects the conflict and decides what to do.
  * 
- * Uses Firestore for all database operations.
+ * Uses Prisma/PostgreSQL for all database operations.
  */
 import { calendarEvents, shadowBlocks, users, identities } from '../../db/index.js';
 import logger from '../../utils/logger.js';

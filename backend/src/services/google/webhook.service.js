@@ -1,7 +1,7 @@
 /**
  * Google Webhook Service
  * Manages Push Notification channels for real-time event sync
- * Uses Firestore for subscription storage
+ * Uses Prisma/PostgreSQL for subscription storage
  */
 import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';

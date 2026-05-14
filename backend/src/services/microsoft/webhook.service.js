@@ -1,7 +1,7 @@
 /**
  * Microsoft Webhook Service
  * Manages Graph API subscriptions for real-time event notifications
- * Uses Firestore for subscription storage
+ * Uses Prisma/PostgreSQL for subscription storage
  */
 import { v4 as uuidv4 } from 'uuid';
 import { getAccessToken } from './auth.service.js';

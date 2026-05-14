@@ -1,7 +1,7 @@
 /**
  * Webhook Receiver Routes
  * Handles incoming push notifications from Google and Microsoft
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import { Router } from 'express';
 import { webhookLimiter } from '../middleware/rateLimiter.js';
@@ -41,7 +41,7 @@ router.post('/google', webhookLimiter, async (req, res) => {
       return;
     }
 
-    // Verify the subscription exists in Firestore
+    // Verify the subscription exists in database
     const sub = await webhookSubscriptions.findActiveBySubscriptionId(channelId);
 
     if (!sub) {
@@ -98,7 +98,7 @@ router.post('/microsoft', webhookLimiter, async (req, res) => {
         continue;
       }
 
-      // Verify subscription in Firestore
+      // Verify subscription in database
       const sub = await webhookSubscriptions.findActiveBySubscriptionId(notification.subscriptionId);
 
       if (!sub) {

@@ -1,7 +1,7 @@
 /**
  * Microsoft OAuth 2.0 Authentication Service
  * Handles authorization flow with MSAL for Microsoft Graph API
- * Uses Firestore for identity storage
+ * Uses Prisma/PostgreSQL for identity storage
  */
 import * as msal from '@azure/msal-node';
 import config from '../../config/env.js';
@@ -38,17 +38,11 @@ function getMsalClient() {
 
 /**
  * Generate the Microsoft authorization URL
- * @param {string} userId - The user ID to include in state
+ * @param {string} state - HMAC-signed state parameter for CSRF protection
  * @returns {string} Authorization URL
  */
-export function getAuthUrl(userId) {
+export function getAuthUrl(state) {
   const client = getMsalClient();
-
-  const state = Buffer.from(JSON.stringify({
-    userId,
-    provider: 'microsoft',
-    timestamp: Date.now(),
-  })).toString('base64');
 
   const authCodeUrlParams = {
     scopes: config.microsoft.scopes,
@@ -92,12 +86,14 @@ export async function handleCallback(code, userId) {
   const isPersonal = personalDomains.some(d => domain?.endsWith(d));
   const providerType = isPersonal ? 'MICROSOFT_PERSONAL' : 'MICROSOFT_365';
 
-  // Encrypt tokens
+  // Encrypt tokens — each gets its own IV for AES-256-GCM security
   const accessTokenData = encrypt(accessToken);
   
-  // Store the MSAL cache for token refresh
+  // Store the MSAL cache for token refresh (with its own IV)
   const cacheData = client.getTokenCache().serialize();
   const cacheEncrypted = encrypt(cacheData);
+  // Store cache as "iv:ciphertext" so it carries its own IV
+  const cacheCombined = `${cacheEncrypted.iv}:${cacheEncrypted.encrypted}`;
 
   // Get default calendar
   const calendarResponse = await fetch('https://graph.microsoft.com/v1.0/me/calendar', {
@@ -105,25 +101,25 @@ export async function handleCallback(code, userId) {
   });
   const calendarInfo = await calendarResponse.json();
 
-  // Upsert identity in Firestore
+  // Upsert identity in database
   const identity = await identities.upsert(
     userId, providerType, email,
     // Create data
     {
       providerAccountId: userInfo.id,
       accessTokenEnc: accessTokenData.encrypted,
-      refreshTokenEnc: cacheEncrypted.encrypted,
+      refreshTokenEnc: cacheCombined,
       tokenIv: accessTokenData.iv,
-      tokenExpiresAt: tokenResponse.expiresOn ? new Date(tokenResponse.expiresOn).toISOString() : null,
+      tokenExpiresAt: tokenResponse.expiresOn ? new Date(tokenResponse.expiresOn) : null,
       calendarId: calendarInfo.id,
       calendarName: calendarInfo.name || 'Calendar',
     },
     // Update data
     {
       accessTokenEnc: accessTokenData.encrypted,
-      refreshTokenEnc: cacheEncrypted.encrypted,
+      refreshTokenEnc: cacheCombined,
       tokenIv: accessTokenData.iv,
-      tokenExpiresAt: tokenResponse.expiresOn ? new Date(tokenResponse.expiresOn).toISOString() : null,
+      tokenExpiresAt: tokenResponse.expiresOn ? new Date(tokenResponse.expiresOn) : null,
       isActive: true,
       calendarId: calendarInfo.id,
       calendarName: calendarInfo.name || 'Calendar',
@@ -162,7 +158,15 @@ export async function getAccessToken(identity) {
   // Token is expiring, try to refresh via MSAL cache
   try {
     if (identity.refreshTokenEnc) {
-      const cachedData = decrypt(identity.refreshTokenEnc, identity.tokenIv);
+      // MSAL cache stores its own IV as "iv:ciphertext"
+      const parts = identity.refreshTokenEnc.split(':');
+      let cachedData;
+      if (parts.length === 2) {
+        cachedData = decrypt(parts[1], parts[0]);
+      } else {
+        // Legacy format: try with access token IV as fallback
+        cachedData = decrypt(identity.refreshTokenEnc, identity.tokenIv);
+      }
       if (cachedData) {
         client.getTokenCache().deserialize(cachedData);
       }
@@ -176,15 +180,15 @@ export async function getAccessToken(identity) {
       });
 
       if (silentResult) {
-        // Update stored tokens in Firestore
+        // Update stored tokens in database
         const newAccessTokenData = encrypt(silentResult.accessToken);
         const newCacheData = encrypt(client.getTokenCache().serialize());
 
         await identities.update(identity.id, {
           accessTokenEnc: newAccessTokenData.encrypted,
-          refreshTokenEnc: newCacheData.encrypted,
+          refreshTokenEnc: `${newCacheData.iv}:${newCacheData.encrypted}`,
           tokenIv: newAccessTokenData.iv,
-          tokenExpiresAt: silentResult.expiresOn ? new Date(silentResult.expiresOn).toISOString() : null,
+          tokenExpiresAt: silentResult.expiresOn ? new Date(silentResult.expiresOn) : null,
         });
 
         await syncLogs.create({

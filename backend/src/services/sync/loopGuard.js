@@ -1,6 +1,6 @@
 /**
  * Infinite Loop Prevention Guard
- * Uses Firestore for database-level dedup checks
+ * Uses Prisma/PostgreSQL for database-level dedup checks
  */
 import { isSystemGenerated as isGoogleSystemGenerated } from '../google/calendar.service.js';
 import { isSystemGenerated as isMicrosoftSystemGenerated } from '../microsoft/calendar.service.js';

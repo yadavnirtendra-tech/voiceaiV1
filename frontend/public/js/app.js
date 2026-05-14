@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
   startClock();
 });
 
+// ---- XSS Escaping ----
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
 // ---- Theme ----
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -131,10 +139,27 @@ window.handleLogin = handleLogin;
 
 async function handleRegister(e) {
   e.preventDefault();
-  const displayName = document.getElementById('regName').value;
-  const email = document.getElementById('regEmail').value;
+  const displayName = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  // Frontend validation
+  if (!displayName) {
+    return showToast('Display name is required', 'error');
+  }
+  if (!email || !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    return showToast('Please enter a valid email address', 'error');
+  }
+  if (password.length < 8) {
+    return showToast('Password must be at least 8 characters', 'error');
+  }
+  if (!/[A-Z]/.test(password)) {
+    return showToast('Password must contain at least one uppercase letter', 'error');
+  }
+  if (!/[0-9]/.test(password)) {
+    return showToast('Password must contain at least one number', 'error');
+  }
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Creating account...';
@@ -300,17 +325,19 @@ function updateAccounts(identities) {
 
   container.innerHTML = identities.map(id => {
     const isGoogle = id.providerType.startsWith('GOOGLE');
-    const providerLabel = id.providerType.replace('_', ' ');
+    const providerLabel = escapeHtml(id.providerType.replace('_', ' '));
     const icon = isGoogle ? 'google' : 'microsoft';
     const emoji = isGoogle ? '🔴' : '🔵';
     const syncText = id.lastSyncedAt ? `Synced ${timeAgo(id.lastSyncedAt)}` : 'Never synced';
+    const safeEmail = escapeHtml(id.providerEmail);
+    const safeCalName = escapeHtml(id.calendarName || 'Calendar');
     
     return `<div class="identity-item">
       <div class="identity-info">
         <div class="identity-icon ${icon}">${emoji}</div>
         <div>
-          <div class="identity-email">${id.providerEmail}</div>
-          <div class="identity-meta">${providerLabel} · ${id.calendarName || 'Calendar'} · ${syncText}</div>
+          <div class="identity-email">${safeEmail}</div>
+          <div class="identity-meta">${providerLabel} · ${safeCalName} · ${syncText}</div>
         </div>
       </div>
       <button class="btn btn-danger btn-sm" onclick="disconnect('${id.id}')">Disconnect</button>
@@ -369,21 +396,26 @@ function updateMeetings(events) {
     const start = new Date(event.startTime);
     const end = new Date(event.endTime);
     const isGoogle = event.identity?.providerType?.startsWith('GOOGLE');
-    const color = isGoogle ? '#ea4335' : '#0078d4';
+    const isSystem = event.isSystemGenerated || false;
+    const safeTitle = escapeHtml(event.title || 'Untitled');
+    const safeLocation = escapeHtml(event.location || '');
+    const startDateStr = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const startTimeStr = start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    const endTimeStr = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     
     return `
       <div class="meeting-card ${isSystem ? 'system-gen' : ''}">
         <div class="meeting-time-box">
-          <span class="m-date">${startDate}</span>
-          <span class="m-time">${startTime}</span>
+          <span class="m-date">${startDateStr}</span>
+          <span class="m-time">${startTimeStr} - ${endTimeStr}</span>
         </div>
         <div class="meeting-info">
-          <div class="meeting-title">${e.title}</div>
+          <div class="meeting-title">${safeTitle}</div>
           <div class="meeting-details">
-            <span class="provider-badge ${e.identity?.providerType?.toLowerCase().includes('google') ? 'google' : 'microsoft'}">
-              ${e.identity?.providerType?.toLowerCase().includes('google') ? 'G' : 'M'}
+            <span class="provider-badge ${isGoogle ? 'google' : 'microsoft'}">
+              ${isGoogle ? 'G' : 'M'}
             </span>
-            ${e.location ? `<span class="m-loc">📍 ${e.location}</span>` : ''}
+            ${safeLocation ? `<span class="m-loc">📍 ${safeLocation}</span>` : ''}
             ${isSystem ? '<span class="sync-badge">🛡️ Protected Block</span>' : '<span class="sync-badge">✅ Synced</span>'}
           </div>
         </div>

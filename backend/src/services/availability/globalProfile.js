@@ -1,7 +1,7 @@
 /**
  * Global Availability Profile Service
  * Computes unified availability across all connected calendars
- * Uses Firestore for all database operations
+ * Uses Prisma/PostgreSQL for all database operations
  */
 import { calendarEvents } from '../../db/index.js';
 import logger from '../../utils/logger.js';

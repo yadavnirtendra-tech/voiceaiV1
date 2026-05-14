@@ -45,13 +45,13 @@ export async function processWebhook(identityId, providerPayload) {
       const result = await googleCal.listEvents(identity, { syncToken: identity.latestSyncToken });
       changedEvents = result.events;
       if (result.nextSyncToken) {
-        await identities.update(identity.id, { latestSyncToken: result.nextSyncToken, lastSyncedAt: new Date().toISOString() });
+        await identities.update(identity.id, { latestSyncToken: result.nextSyncToken, lastSyncedAt: new Date() });
       }
     } else {
       const result = await msCal.listEvents(identity, { deltaLink: identity.latestSyncToken });
       changedEvents = result.events;
       if (result.deltaLink) {
-        await identities.update(identity.id, { latestSyncToken: result.deltaLink, lastSyncedAt: new Date().toISOString() });
+        await identities.update(identity.id, { latestSyncToken: result.deltaLink, lastSyncedAt: new Date() });
       }
     }
 
@@ -179,13 +179,13 @@ export async function fullSync(userId) {
         const result = await googleCal.listEvents(identity, {});
         events = result.events;
         if (result.nextSyncToken) {
-          await identities.update(identity.id, { latestSyncToken: result.nextSyncToken, lastSyncedAt: new Date().toISOString() });
+          await identities.update(identity.id, { latestSyncToken: result.nextSyncToken, lastSyncedAt: new Date() });
         }
       } else {
         const result = await msCal.listEvents(identity, {});
         events = result.events;
         if (result.deltaLink) {
-          await identities.update(identity.id, { latestSyncToken: result.deltaLink, lastSyncedAt: new Date().toISOString() });
+          await identities.update(identity.id, { latestSyncToken: result.deltaLink, lastSyncedAt: new Date() });
         }
       }
       for (const event of events) {
@@ -202,5 +202,5 @@ export async function fullSync(userId) {
 }
 
 async function updateLog(id, status, errorMessage = null) {
-  await syncLogs.update(id, { status, errorMessage, completedAt: new Date().toISOString() });
+  await syncLogs.update(id, { status, errorMessage, completedAt: new Date() });
 }
