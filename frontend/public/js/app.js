@@ -568,6 +568,7 @@ async function updateTimezone(timezone) {
       credentials: 'include'
     });
     const data = await res.json();
+    if (data.success) {
       showToast(`Timezone updated to ${timezone}`, 'success');
       if (fullCalendarInstance) {
         fullCalendarInstance.setOption('timeZone', timezone === 'UTC' ? 'UTC' : timezone);
