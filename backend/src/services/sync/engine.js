@@ -189,6 +189,37 @@ export async function fullSync(userId) {
       for (const event of events) {
         await processEvent(event, identity);
       }
+
+      // Deletion Reconciliation: Cleanup events that were deleted while webhooks were down
+      const timeMin = new Date();
+      const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const dbEvents = await calendarEvents.findByUser(userId, {
+        startAfter: timeMin,
+        endBefore: timeMax,
+        excludeCancelled: true,
+      });
+      const dbEventsForIdentity = dbEvents.filter(e => e.identityId === identity.id);
+      
+      const fetchedExternalIds = new Set(events.map(e => e.id));
+
+      for (const dbEvent of dbEventsForIdentity) {
+        if (!fetchedExternalIds.has(dbEvent.externalEventId)) {
+          logger.info('Reconciliation: Marking deleted event as CANCELLED', { eventId: dbEvent.id });
+          await calendarEvents.update(dbEvent.id, { status: 'CANCELLED' });
+          await deleteShadowBlocks(dbEvent.id);
+          
+          await syncLogs.create({
+            userId, 
+            identityId: identity.id, 
+            action: 'EVENT_DELETED', 
+            status: 'COMPLETED',
+            externalEventId: dbEvent.externalEventId, 
+            providerType: identity.providerType, 
+            completedAt: new Date(),
+            metadata: { reason: 'Reconciliation_Missing_In_Full_Sync' }
+          });
+        }
+      }
     } catch (error) {
       logger.error('Full sync error for identity', { identityId: identity.id, error: error.message });
     }
