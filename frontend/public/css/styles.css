@@ -1179,16 +1179,52 @@ input:checked + .slider:before { transform: translateX(16px); }
   padding: 2px 6px; border-radius: 4px; font-family: monospace; cursor: help;
   background: rgba(0,0,0,0.03);
 }
-[data-theme=" dark\] .kbd-hint { background: rgba(255,255,255,0.05); }
+[data-theme="dark"] .kbd-hint { background: rgba(255,255,255,0.05); }
 
 .modal-content {
- width: 100%; max-width: 500px; background: var(--bg-card-solid);
- border: 1px solid var(--border-color); border-radius: var(--radius-lg);
- box-shadow: 0 24px 64px rgba(0,0,0,0.4); animation: modalScale 0.2s ease-out;
+  width: 100%; max-width: 500px; background: var(--bg-card-solid);
+  border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4); animation: modalScale 0.2s ease-out;
 }
 
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
 
-[data-theme=\newspaper\] .modal-content { border: 3px double var(--border-color); box-shadow: 10px 10px 0 var(--border-color); }
-[data-theme=\light\] .modal-content { background: #D8EACF; }
+[data-theme="newspaper"] .modal-content { border: 3px double var(--border-color); box-shadow: 10px 10px 0 var(--border-color); }
+[data-theme="light"] .modal-content { background: #D8EACF; }
+
+/* ---- Pricing Section ---- */
+.pricing-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+[data-theme="light"] .pricing-card:hover {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+[data-theme="newspaper"] .pricing-card {
+  border: 2px solid var(--border-color) !important;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 var(--border-color) !important;
+}
+[data-theme="newspaper"] .pricing-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--border-color) !important;
+}
+.pricing-card ul li {
+  position: relative;
+  padding-left: 20px;
+}
+.pricing-card ul li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent-emerald);
+  font-weight: bold;
+}
+

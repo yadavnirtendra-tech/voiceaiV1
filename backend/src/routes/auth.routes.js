@@ -296,4 +296,45 @@ router.get('/status', optionalAuth, (req, res) => {
   res.json({ authenticated: !!req.user, user: req.user || null });
 });
 
+/** POST /api/auth/forgot-password - Mock reset request */
+router.post('/forgot-password', authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    
+    const user = await users.findByEmail(email.toLowerCase().trim());
+    if (!user) {
+      // Security best practice: don't reveal if user exists
+      return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+    }
+    
+    // In production, we'd generate a token and send an email
+    logger.info('Password reset requested', { email: user.email });
+    res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+/** POST /api/auth/reset-password - Update password */
+router.post('/reset-password', authLimiter, async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) return res.status(400).json({ error: 'Missing fields' });
+    
+    const validationErrors = validateRegistration(email, newPassword, 'User');
+    if (validationErrors.length > 0) return res.status(400).json({ error: validationErrors[0] });
+
+    const user = await users.findByEmail(email.toLowerCase().trim());
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await users.update(user.id, { passwordHash });
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Reset failed' });
+  }
+});
+
 export default router;

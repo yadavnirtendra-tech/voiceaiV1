@@ -5,6 +5,8 @@
 // ---- State ----
 let currentUser = null;
 let pollInterval = null;
+let isBossMode = false;
+let fullCalendarInstance = null;
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
@@ -70,7 +72,7 @@ function startClock() {
   }, 1000);
 }
 
-// ---- URL Params (post-OAuth redirect) ----
+// ---- URL Params ----
 function checkUrlParams() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('success') === 'true') {
@@ -87,7 +89,6 @@ function checkUrlParams() {
 // ---- Auth ----
 async function checkAuthStatus() {
   const overlay = document.getElementById('loadingOverlay');
-  // Only show overlay if we were already in the app, otherwise keep it hidden to show landing page
   if (currentUser) overlay.style.display = 'flex';
 
   try {
@@ -109,109 +110,6 @@ async function checkAuthStatus() {
     overlay.style.display = 'none';
   }
 }
-
-// ---- Auth UI Helpers ----
-function showAuthUI() {
-  document.getElementById('authSection').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-}
-
-function hideAuthUI() {
-  document.getElementById('authSection').style.display = 'none';
-}
-
-function switchTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-  document.getElementById('loginForm').style.display = isLogin ? 'flex' : 'none';
-  document.getElementById('registerForm').style.display = isLogin ? 'none' : 'flex';
-}
-window.switchTab = switchTab;
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Signing in...';
-
-  try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('Welcome back!', 'success');
-      hideAuthUI();
-      checkAuthStatus();
-    } else {
-      showToast(data.error || 'Login failed', 'error');
-    }
-  } catch (error) {
-    showToast('Login failed', 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Sign In';
-  }
-}
-window.handleLogin = handleLogin;
-
-async function handleRegister(e) {
-  e.preventDefault();
-  const displayName = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const password = document.getElementById('regPassword').value;
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-
-  // Frontend validation
-  if (!displayName) {
-    return showToast('Display name is required', 'error');
-  }
-  if (!email || !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    return showToast('Please enter a valid email address', 'error');
-  }
-  if (password.length < 8) {
-    return showToast('Password must be at least 8 characters', 'error');
-  }
-  if (!/[A-Z]/.test(password)) {
-    return showToast('Password must contain at least one uppercase letter', 'error');
-  }
-  if (!/[0-9]/.test(password)) {
-    return showToast('Password must contain at least one number', 'error');
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Creating account...';
-
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ displayName, email, password }),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('Account created!', 'success');
-      hideAuthUI();
-      checkAuthStatus();
-    } else {
-      showToast(data.error || 'Registration failed', 'error');
-    }
-  } catch (error) {
-    showToast('Registration failed', 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Create Account';
-  }
-}
-window.handleRegister = handleRegister;
 
 function showAuthenticatedUI() {
   document.getElementById('loadingOverlay').style.display = 'none';
@@ -247,41 +145,57 @@ function showUnauthenticatedUI() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('userInfo').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
-  window.scrollTo(0, 0); // Reset scroll to top
 }
 
-async function logout() {
-  try {
-    // Attempt to clear cookie on server
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-  } catch (error) {
-    console.error('Logout request failed:', error);
-  } finally {
-    // Always clear local state and show landing page
-    currentUser = null;
-    if (pollInterval) {
-      clearInterval(pollInterval);
-      pollInterval = null;
-    }
-    resetDashboard();
-    showUnauthenticatedUI();
-    showToast('Logged out successfully', 'success');
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+    credentials: 'include'
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('Welcome back!', 'success');
+    checkAuthStatus();
+  } else {
+    showToast(data.error || 'Login failed', 'error');
   }
+}
+window.handleLogin = handleLogin;
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const displayName = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName, email, password }),
+    credentials: 'include'
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('Account created!', 'success');
+    checkAuthStatus();
+  } else {
+    showToast(data.error || 'Registration failed', 'error');
+  }
+}
+window.handleRegister = handleRegister;
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  currentUser = null;
+  showUnauthenticatedUI();
 }
 window.logout = logout;
 
 // ---- Dashboard Data ----
-// ---- Calendar Integrations ----
-function connectGoogle() {
-  window.location.href = '/api/auth/google';
-}
-window.connectGoogle = connectGoogle;
-
-function connectMicrosoft() {
-  window.location.href = '/api/auth/microsoft';
-}
-window.connectMicrosoft = connectMicrosoft;
-
 async function fetchDashboardData() {
   if (!currentUser) return;
   try {
@@ -289,19 +203,15 @@ async function fetchDashboardData() {
       fetch('/api/dashboard/stats', { credentials: 'include' }),
       fetch('/api/calendar/events', { credentials: 'include' })
     ]);
-    
     if (statsRes.ok) {
       const data = await statsRes.json();
       if (data.success) {
         updateStats(data.stats);
         updateAccounts(currentUser.identities || []);
         updateActivity(data.recentActivity || []);
-        updateSyncStatus('System Online', 'emerald');
-        updateLastUpdated();
         fetchWebhookStatus();
       }
     }
-    
     if (eventsRes.ok) {
       const eventData = await eventsRes.json();
       if (eventData.success) {
@@ -309,217 +219,85 @@ async function fetchDashboardData() {
       }
     }
   } catch (e) {
-    console.error('Dashboard fetch error:', e);
+    console.error('Fetch error:', e);
   }
 }
 
 function updateStats(stats) {
-  animateNumber('statCalendars', stats.connectedCalendars || 0);
-  animateNumber('statEvents', stats.totalEvents || 0);
-  animateNumber('statShadows', stats.activeShadowBlocks || 0);
-  animateNumber('statSyncs', stats.syncsToday || 0);
-}
-
-function animateNumber(elId, target) {
-  const el = document.getElementById(elId);
-  const current = parseInt(el.textContent) || 0;
-  if (current === target) return;
-  const duration = 600;
-  const start = performance.now();
-  
-  function update(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    el.textContent = Math.round(current + (target - current) * eased);
-    if (progress < 1) requestAnimationFrame(update);
-  }
-  requestAnimationFrame(update);
-}
-
-function updateSyncStatus(text, colorVar) {
-  const statusText = document.getElementById('syncStatus');
-  const dot = document.querySelector('.navbar-status .status-dot');
-  if (statusText) statusText.textContent = text;
-  if (dot) dot.style.background = `var(--accent-${colorVar})`;
-}
-
-function updateLastUpdated() {
-  const el = document.getElementById('lastUpdated');
-  if (el) el.textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+  document.getElementById('statCalendars').textContent = stats.connectedCalendars || 0;
+  document.getElementById('statEvents').textContent = stats.totalEvents || 0;
+  document.getElementById('statShadows').textContent = stats.activeShadowBlocks || 0;
+  document.getElementById('statSyncs').textContent = stats.syncsToday || 0;
 }
 
 function updateAccounts(identities) {
   const container = document.getElementById('accountsList');
   if (!identities.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔌</div><p>No calendars connected yet.</p></div>';
+    container.innerHTML = '<div class="empty-state">No calendars connected.</div>';
     return;
   }
-
-  container.innerHTML = identities.map(id => {
-    const isGoogle = id.providerType.startsWith('GOOGLE');
-    const providerLabel = escapeHtml(id.providerType.replace('_', ' '));
-    const icon = isGoogle ? 'google' : 'microsoft';
-    const emoji = isGoogle ? '🔴' : '🔵';
-    const syncText = id.lastSyncedAt ? `Synced ${timeAgo(id.lastSyncedAt)}` : 'Never synced';
-    const safeEmail = escapeHtml(id.providerEmail);
-    const safeCalName = escapeHtml(id.calendarName || 'Calendar');
-    
-    return `<div class="identity-item">
+  container.innerHTML = identities.map(id => `
+    <div class="identity-item">
       <div class="identity-info">
-        <div class="identity-icon ${icon}">${emoji}</div>
-        <div>
-          <div class="identity-email">${safeEmail}</div>
-          <div class="identity-meta">${providerLabel} · ${safeCalName} · ${syncText}</div>
-        </div>
+        <div class="identity-email">${escapeHtml(id.providerEmail)}</div>
+        <div class="identity-meta">${id.providerType} · ${escapeHtml(id.calendarName || 'Calendar')}</div>
       </div>
       <button class="btn btn-danger btn-sm" onclick="disconnect('${id.id}')">Disconnect</button>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 }
-
-let currentActivityPage = 0;
-const ACTIVITY_PAGE_SIZE = 8;
 
 function updateActivity(logs) {
   const container = document.getElementById('activityFeed');
   if (!logs.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No sync activity yet.</p></div>';
+    container.innerHTML = '<div class="empty-state">No recent activity.</div>';
     return;
   }
-
-  const startIdx = currentActivityPage * ACTIVITY_PAGE_SIZE;
-  const pageLogs = logs.slice(startIdx, startIdx + ACTIVITY_PAGE_SIZE);
-
-  let html = pageLogs.map(log => {
-    return `<div class="activity-item">
-      <div class="activity-dot ${log.status === 'COMPLETED' ? 'created' : 'error'}"></div>
+  container.innerHTML = logs.slice(0, 8).map(log => `
+    <div class="activity-item">
+      <div class="activity-dot ${log.status === 'COMPLETED' ? 'synced' : 'error'}"></div>
       <div class="activity-content">
-        <div class="activity-text"><strong>${log.action.replace(/_/g, ' ')}</strong> - ${log.status}</div>
-        <div class="activity-time">${new Date(log.startedAt).toLocaleString()}</div>
+        <div class="activity-text"><strong>${log.action}</strong> - ${log.status}</div>
+        <div class="activity-time">${new Date(log.startedAt).toLocaleTimeString()}</div>
       </div>
-    </div>`;
-  }).join('');
-
-  // Pagination controls
-  if (logs.length > ACTIVITY_PAGE_SIZE) {
-    html += `<div style="display:flex; justify-content:space-between; margin-top:16px;">
-      <button class="btn btn-ghost btn-sm" onclick="changeActivityPage(-1, ${logs.length})" ${currentActivityPage === 0 ? 'disabled' : ''}>← Prev</button>
-      <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">Page ${currentActivityPage + 1}</span>
-      <button class="btn btn-ghost btn-sm" onclick="changeActivityPage(1, ${logs.length})" ${startIdx + ACTIVITY_PAGE_SIZE >= logs.length ? 'disabled' : ''}>Next →</button>
-    </div>`;
-  }
-
-  container.innerHTML = html;
+    </div>
+  `).join('');
 }
 
-window.changeActivityPage = function(delta, totalLength) {
-  currentActivityPage += delta;
-  if (currentActivityPage < 0) currentActivityPage = 0;
-  if (currentActivityPage * ACTIVITY_PAGE_SIZE >= totalLength) currentActivityPage--;
-  // Re-render activity using cached logs or triggering fetch
-  if (currentUser) fetchDashboardData();
-};
-
-
-function resetDashboard() {
-  ['statCalendars','statEvents','statShadows','statSyncs'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '0';
-  });
-  const accountsList = document.getElementById('accountsList');
-  if (accountsList) accountsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🔌</div><p>No calendars connected.</p></div>';
-  const activityFeed = document.getElementById('activityFeed');
-  if (activityFeed) activityFeed.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No activity yet.</p></div>';
-  const meetingsList = document.getElementById('meetingsList');
-  if (meetingsList) meetingsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No meetings found or calendars not connected.</p></div>';
-  const syncStatus = document.getElementById('syncStatus');
-  if (syncStatus) syncStatus.textContent = 'System Ready';
-}
-
-let fullCalendarInstance = null;
-
+// ---- Calendar Logic ----
 function updateMeetings(events) {
   const container = document.getElementById('calendar');
   if (!container) return;
   
-  const now = new Date();
-  // Filter out past events and sort
-  const upcoming = events.filter(e => new Date(e.endTime) >= now)
-    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-
-  const userTz = document.getElementById('timezoneSelect').value || 'local';
-
   if (!fullCalendarInstance) {
     fullCalendarInstance = new FullCalendar.Calendar(container, {
-      timeZone: userTz === 'UTC' ? 'UTC' : userTz,
       initialView: 'timeGridWeek',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'timeGridWeek,timeGridDay,dayGridMonth'
-      },
+      headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,timeGridDay' },
       height: 600,
-      slotMinTime: '06:00:00',
-      slotMaxTime: '21:00:00',
-      slotDuration: '00:30:00',
-      expandRows: true,
-      allDaySlot: false,
-      nowIndicator: true,
-      scrollTime: '08:00:00',
-      stickyHeaderDates: true,
-      events: [],
       eventContent: function(arg) {
-        let italicEl = document.createElement('div');
+        let el = document.createElement('div');
         const isSystem = arg.event.extendedProps?.isSystemGenerated;
-        
-        // Boss Mode Logic
         if (isBossMode && !isSystem) {
-          italicEl.innerHTML = '<strong>Busy</strong>';
+          el.innerHTML = '<strong>Busy</strong>';
         } else {
-          italicEl.innerHTML = arg.event.title;
+          el.innerHTML = arg.event.title;
         }
-        
-        italicEl.style.fontSize = '0.85em';
-        italicEl.style.whiteSpace = 'normal';
-        italicEl.style.overflow = 'hidden';
-        let arrayOfDomNodes = [ italicEl ]
-        return { domNodes: arrayOfDomNodes }
+        el.style.fontSize = '0.85em';
+        return { domNodes: [el] };
       }
     });
     fullCalendarInstance.render();
   }
 
-  const fcEvents = upcoming.map(event => {
-    const isGoogle = event.identity?.providerType?.startsWith('GOOGLE');
-    const isSystem = event.isSystemGenerated || false;
-    
-    let bgColor = 'var(--surface-light)';
-    let textColor = 'var(--text-primary)';
-    let titlePrefix = '';
-    
-    if (isSystem) {
-      bgColor = 'var(--accent-emerald)';
-      titlePrefix = '🛡️ ';
-    } else if (isGoogle) {
-      bgColor = 'var(--accent-cyan)';
-      titlePrefix = 'G | ';
-    } else {
-      bgColor = 'var(--accent-indigo)';
-      titlePrefix = 'M | ';
-    }
-
-    return {
-      id: event.id,
-      title: titlePrefix + (event.title || 'Untitled'),
-      start: event.startTime,
-      end: event.endTime,
-      backgroundColor: bgColor,
-      borderColor: 'transparent',
-      textColor: textColor,
-      extendedProps: { isSystemGenerated: isSystem }
-    };
-  });
+  const fcEvents = events.map(event => ({
+    id: event.id,
+    title: (event.isSystemGenerated ? '🛡️ ' : '') + (event.title || 'Untitled'),
+    start: event.startTime,
+    end: event.endTime,
+    backgroundColor: event.isSystemGenerated ? 'var(--accent-emerald)' : 'var(--accent-indigo)',
+    borderColor: 'transparent',
+    extendedProps: { isSystemGenerated: event.isSystemGenerated }
+  }));
 
   fullCalendarInstance.removeAllEvents();
   fullCalendarInstance.addEventSource(fcEvents);
@@ -527,212 +305,51 @@ function updateMeetings(events) {
 
 // ---- Actions ----
 async function triggerSync() {
-  if (!currentUser) return showToast('Please connect a calendar first', 'error');
-  try {
-    showToast('Sync started...', 'success');
-    await fetch('/api/calendar/sync', { method: 'POST', credentials: 'include' });
-    setTimeout(fetchDashboardData, 2000);
-  } catch {
-    showToast('Sync failed', 'error');
-  }
+  showToast('Sync started...', 'success');
+  animatePipeline();
+  await fetch('/api/calendar/sync', { method: 'POST', credentials: 'include' });
+  setTimeout(fetchDashboardData, 2000);
 }
+window.triggerSync = triggerSync;
 
-async function disconnect(identityId) {
-  if (!confirm('Disconnect this calendar? Active shadow blocks will be cancelled.')) return;
-  try {
-    const res = await fetch(`/api/auth/disconnect/${identityId}`, { method: 'POST', credentials: 'include' });
-    const data = await res.json();
-    if (data.success) {
-      showToast(data.message, 'success');
-      checkAuthStatus();
-    } else {
-      showToast('Disconnect failed', 'error');
-    }
-  } catch {
-    showToast('Disconnect failed', 'error');
-  }
+async function disconnect(id) {
+  if (!confirm('Disconnect this calendar?')) return;
+  await fetch(`/api/auth/disconnect/${id}`, { method: 'POST', credentials: 'include' });
+  checkAuthStatus();
 }
+window.disconnect = disconnect;
 
-async function refreshData() {
-  await checkAuthStatus();
-  showToast('Data refreshed', 'success');
-}
-
-// ---- Polling ----
-function startPolling() {
-  if (pollInterval) clearInterval(pollInterval);
-  pollInterval = setInterval(() => {
-    if (currentUser) fetchDashboardData();
-  }, 30000);
-}
-
-// ---- Helpers ----
-function getDotClass(action, status) {
-  if (status === 'FAILED') return 'error';
-  if (action.includes('CREATED')) return 'created';
-  if (action.includes('DELETED')) return 'deleted';
-  return 'synced';
-}
-
-function getLogText(log) {
-  const actions = {
-    WEBHOOK_RECEIVED: '<strong>Webhook</strong> received',
-    EVENT_CREATED: '<strong>Event</strong> synced',
-    EVENT_UPDATED: '<strong>Event</strong> updated',
-    EVENT_DELETED: '<strong>Event</strong> deleted',
-    SHADOW_CREATED: '<strong>Shadow block</strong> created',
-    SHADOW_DELETED: '<strong>Shadow block</strong> removed',
-    CONFLICT_DETECTED: '<strong>Conflict</strong> detected',
-    TOKEN_REFRESHED: '<strong>Token</strong> refreshed',
-    FULL_SYNC: '<strong>Full sync</strong> completed',
-    LOOP_PREVENTED: '<strong>Loop</strong> prevented',
-  };
-  let text = actions[log.action] || `<strong>${log.action}</strong>`;
-  if (log.providerType) text += ` · ${log.providerType.replace('_',' ')}`;
-  if (log.status === 'FAILED') text += ' · <span style="color:var(--accent-rose)">FAILED</span>';
-  return text;
-}
-
-function timeAgo(dateStr) {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
-  return `${Math.floor(seconds/86400)}d ago`;
-}
-
-function capitalize(str) {
-  return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
-}
-
-async function updateTimezone(timezone) {
-  try {
-    const res = await fetch('/api/user/settings', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timezone }),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast(`Timezone updated to ${timezone}`, 'success');
-      if (fullCalendarInstance) {
-        fullCalendarInstance.setOption('timeZone', timezone === 'UTC' ? 'UTC' : timezone);
-      }
-    }
-  } catch (error) {
-    showToast('Failed to update timezone', 'error');
-  }
-}
-window.updateTimezone = updateTimezone;
-
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `${type === 'success' ? '✅' : '❌'} ${message}`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'all 0.3s';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
-}
-
-// ---- State Machine Animation (visual only) ----
-function animateStateMachine(activeState) {
-  const states = ['stateIdle','stateWebhook','stateLoopCheck','stateFetch','stateConflict','stateShadow','stateSync'];
-  states.forEach(id => document.getElementById(id)?.classList.remove('active'));
-  const target = document.getElementById(activeState);
-  if (target) target.classList.add('active');
-}
-
-// ---- Pipeline Visualizer Animation ----
+// ---- Animations ----
 function animatePipeline() {
   const stages = ['pipeWebhook','pipeFetch','pipeGuard','pipeUpsert','pipeConflict','pipeShadow'];
-  const connectors = ['connWebhook','connFetch','connGuard','connUpsert','connConflict'];
-
-  // Reset all
-  stages.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.classList.remove('active','done'); el.textContent = stages.indexOf(id) + 1; }
-  });
-  connectors.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
-  });
-
-  // Stagger through stages
   stages.forEach((id, i) => {
     setTimeout(() => {
       const el = document.getElementById(id);
-      if (!el) return;
-      // Mark previous as done
-      if (i > 0) {
-        const prev = document.getElementById(stages[i-1]);
-        if (prev) { prev.classList.remove('active'); prev.classList.add('done'); prev.textContent = '✓'; }
-        const conn = document.getElementById(connectors[i-1]);
-        if (conn) conn.classList.add('active');
-      }
-      el.classList.add('active');
-      // Final stage
-      if (i === stages.length - 1) {
-        setTimeout(() => {
-          el.classList.remove('active'); el.classList.add('done'); el.textContent = '✓';
-        }, 400);
-      }
-    }, i * 350);
+      if (el) el.classList.add('active');
+      setTimeout(() => { if (el) el.classList.remove('active'); }, 1000);
+    }, i * 300);
   });
 }
-
-// Run pipeline animation on sync
-const originalTriggerSync = triggerSync;
-// Override to add visual pipeline
-async function triggerSyncWithPipeline() {
-  if (!currentUser) return showToast('Please connect a calendar first', 'error');
-  try {
-    showToast('Sync started...', 'success');
-    animatePipeline();
-    await fetch('/api/calendar/sync', { method: 'POST', credentials: 'include' });
-    setTimeout(fetchDashboardData, 2000);
-  } catch {
-    showToast('Sync failed', 'error');
-  }
-}
-window.triggerSync = triggerSyncWithPipeline;
 
 // ---- Command Palette ----
 let paletteSearchTimeout;
 function handlePaletteSearch(q) {
   clearTimeout(paletteSearchTimeout);
-  if (!q) return document.getElementById('paletteResults').innerHTML = '<div class="empty-state">Start typing to search...</div>';
-  
+  if (!q) return;
   paletteSearchTimeout = setTimeout(async () => {
-    try {
-      const res = await fetch(`/api/calendar/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
-      const data = await res.json();
-      renderPaletteResults(data.events || []);
-    } catch (e) {
-      console.error('Search failed', e);
-    }
+    const res = await fetch(`/api/calendar/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
+    const data = await res.json();
+    renderPaletteResults(data.events || []);
   }, 300);
 }
+window.handlePaletteSearch = handlePaletteSearch;
 
 function renderPaletteResults(events) {
   const container = document.getElementById('paletteResults');
-  if (!events.length) {
-    container.innerHTML = '<div class="empty-state">No matches found.</div>';
-    return;
-  }
-  
   container.innerHTML = events.map(ev => `
     <div class="palette-item" onclick="navigateToEvent('${ev.startTime}')">
-      <div class="palette-item-info">
-        <div class="palette-item-title">${ev.summary || '(No Title)'}</div>
-        <div class="palette-item-meta">${new Date(ev.startTime).toLocaleString()}</div>
-      </div>
-      <div class="palette-item-provider">${ev.identity?.providerType.toUpperCase()}</div>
+      <div class="palette-item-title">${ev.summary || 'Meeting'}</div>
+      <div class="palette-item-meta">${new Date(ev.startTime).toLocaleString()}</div>
     </div>
   `).join('');
 }
@@ -747,6 +364,7 @@ function closeCommandPalette(e) {
     document.getElementById('commandPalette').style.display = 'none';
   }
 }
+window.closeCommandPalette = closeCommandPalette;
 
 function navigateToEvent(dateStr) {
   if (fullCalendarInstance) {
@@ -755,146 +373,154 @@ function navigateToEvent(dateStr) {
   }
   closeCommandPalette('esc');
 }
+window.navigateToEvent = navigateToEvent;
 
-// ---- Boss Mode & Power Tools ----
-let isBossMode = false;
+// ---- Boss Mode ----
 function toggleBossMode() {
   isBossMode = document.getElementById('bossModeToggle').checked;
-  if (fullCalendarInstance) {
-    fullCalendarInstance.refetchEvents(); // This will trigger re-rendering with new content logic
-  }
-  showToast(`Boss Mode ${isBossMode ? 'Enabled' : 'Disabled'}`, 'success');
+  if (fullCalendarInstance) fullCalendarInstance.refetchEvents();
+  showToast(`Boss Mode ${isBossMode ? 'Enabled' : 'Disabled'}`);
 }
+window.toggleBossMode = toggleBossMode;
 
 async function purgeShadowBlocks() {
-  if (!confirm('This will delete all cross-calendar "Reserved" blocks. They will be recreated on the next sync. Proceed?')) return;
-  try {
-    const res = await fetch('/api/calendar/shadow-blocks/cleanup', { method: 'POST', credentials: 'include' });
-    const data = await res.json();
-    showToast(data.message || 'Shadow blocks purged', 'success');
-    fetchDashboardData();
-  } catch (e) {
-    showToast('Purge failed', 'error');
-  }
+  if (!confirm('Purge all shadow blocks?')) return;
+  await fetch('/api/calendar/shadow-blocks/cleanup', { method: 'POST', credentials: 'include' });
+  fetchDashboardData();
 }
+window.purgeShadowBlocks = purgeShadowBlocks;
 
+// ---- Webhook Health ----
 async function fetchWebhookStatus() {
   const container = document.getElementById('webhookHealthList');
-  try {
-    const res = await fetch('/api/calendar/webhooks/status', { credentials: 'include' });
-    const data = await res.json();
-    if (!data.health?.length) {
-      container.innerHTML = '<div class="empty-state" style="padding: 12px;"><p style="font-size:0.75rem;">No active webhooks.</p></div>';
-      return;
-    }
-    
-    container.innerHTML = data.health.map(h => `
-      <div class="webhook-item">
-        <div class="webhook-provider">
-          <span class="provider-badge ${h.provider.toLowerCase()}">${h.provider[0].toUpperCase()}</span>
-          <span>${h.email}</span>
-        </div>
-        <div class="health-indicator">
-          <span class="health-dot ${h.status}"></span>
-          <span style="color:var(--text-muted)">${h.status}</span>
-        </div>
-      </div>
-    `).join('');
-  } catch (e) {
-    container.innerHTML = '<p style="color:var(--accent-rose); font-size:0.75rem;">Error loading health.</p>';
+  const res = await fetch('/api/calendar/webhooks/status', { credentials: 'include' });
+  const data = await res.json();
+  if (!data.health?.length) {
+    container.innerHTML = '<p>No active webhooks.</p>';
+    return;
   }
+  container.innerHTML = data.health.map(h => `
+    <div class="webhook-item">
+      <span>${h.provider} - ${h.email}</span>
+      <span class="status-dot ${h.status}"></span>
+    </div>
+  `).join('');
 }
-
-// Hotkey listener
-window.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault();
-    openCommandPalette();
-  }
-  if (e.key === 'Escape') {
-    closeCommandPalette('esc');
-  }
-});
-
-// Update FullCalendar eventContent to respect Boss Mode
-const originalEventContent = fullCalendarInstance?.getOption('eventContent');
-// I will apply this in a separate chunk to avoid complexity
-
-function scrollToAuth() {
-  document.getElementById("authSection").scrollIntoView({ behavior: "smooth" });
-}
+window.fetchWebhookStatus = fetchWebhookStatus;
 
 // ---- Event Creation Modal ----
 function openEventModal() {
-  const modal = document.getElementById("eventModal");
-  modal.style.display = "flex";
-  
-  // Populate identities dropdown
+  document.getElementById("eventModal").style.display = "flex";
   const select = document.getElementById("eventIdentity");
-  const activeIdentities = currentUser.identities || [];
-  select.innerHTML = activeIdentities.map(id => 
+  select.innerHTML = (currentUser.identities || []).map(id => 
     `<option value="${id.id}">${id.providerType}: ${id.providerEmail}</option>`
   ).join("");
-
-  // Set default times (next hour)
-  const now = new Date();
-  now.setMinutes(0, 0, 0);
-  const start = new Date(now.getTime() + 60 * 60 * 1000);
-  const end = new Date(start.getTime() + 60 * 60 * 1000);
-  
-  document.getElementById("eventStart").value = new Date(start.getTime() - start.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  document.getElementById("eventEnd").value = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
+window.openEventModal = openEventModal;
 
 function closeEventModal(e) {
-  if (e === "esc" || (e.target && e.target.id === "eventModal")) {
+  if (e === "esc" || e.target.id === "eventModal") {
     document.getElementById("eventModal").style.display = "none";
   }
 }
+window.closeEventModal = closeEventModal;
 
 async function handleCreateEvent(e) {
   e.preventDefault();
-  const submitBtn = document.getElementById("eventSubmitBtn");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Creating...";
-
   const payload = {
     identityId: document.getElementById("eventIdentity").value,
     summary: document.getElementById("eventSummary").value,
-    description: document.getElementById("eventDescription").value,
     startTime: document.getElementById("eventStart").value,
-    endTime: document.getElementById("eventEnd").value,
-    attendees: document.getElementById("eventAttendees").value.split(",").map(s => s.trim()).filter(s => s)
+    endTime: document.getElementById("eventEnd").value
   };
+  await fetch("/api/calendar/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
+  closeEventModal("esc");
+  fetchDashboardData();
+}
+window.handleCreateEvent = handleCreateEvent;
 
+// ---- Utilities ----
+function showToast(msg, type='success') {
+  console.log(`[${type}] ${msg}`);
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function startPolling() {
+  setInterval(() => { if (currentUser) fetchDashboardData(); }, 30000);
+}
+
+// ---- Reset Password Handlers ----
+function openResetModal() {
+  document.getElementById('resetModal').style.display = 'flex';
+  document.getElementById('resetRequestStep').style.display = 'block';
+  document.getElementById('resetFinalStep').style.display = 'none';
+}
+window.openResetModal = openResetModal;
+
+function closeResetModal(e) {
+  if (e === 'esc' || e.target.id === 'resetModal') {
+    document.getElementById('resetModal').style.display = 'none';
+  }
+}
+window.closeResetModal = closeResetModal;
+
+async function handleForgotPassword() {
+  const email = document.getElementById('resetEmail').value;
+  if (!email) return showToast('Please enter your email', 'error');
+  
   try {
-    const res = await fetch("/api/calendar/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      credentials: "include"
+    await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    document.getElementById('resetRequestStep').style.display = 'none';
+    document.getElementById('resetFinalStep').style.display = 'block';
+  } catch (e) {
+    showToast('Failed to send link', 'error');
+  }
+}
+window.handleForgotPassword = handleForgotPassword;
+
+async function handleResetPassword() {
+  const email = document.getElementById('resetEmail').value;
+  const newPassword = document.getElementById('newPassword').value;
+  
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, newPassword })
     });
     const data = await res.json();
     if (data.success) {
-      showToast("Meeting created & sync triggered!", "success");
-      closeEventModal("esc");
-      document.getElementById("eventForm").reset();
-      fetchDashboardData();
+      showToast('Password updated! You can now log in.', 'success');
+      closeResetModal('esc');
     } else {
-      showToast(data.error || "Failed to create event", "error");
+      showToast(data.error || 'Reset failed', 'error');
     }
-  } catch (err) {
-    showToast("Event creation failed", "error");
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Create & Sync";
+  } catch (e) {
+    showToast('Reset failed', 'error');
   }
 }
+window.handleResetPassword = handleResetPassword;
 
-// Ensure these are globally accessible
-window.openEventModal = openEventModal;
-window.closeEventModal = closeEventModal;
-window.handleCreateEvent = handleCreateEvent;
-window.scrollToAuth = scrollToAuth;
-window.toggleBossMode = toggleBossMode;
-window.purgeShadowBlocks = purgeShadowBlocks;
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCommandPalette(); }
+  if (e.key === 'Escape') {
+    closeCommandPalette('esc');
+    closeEventModal('esc');
+    closeResetModal('esc');
+  }
+});
