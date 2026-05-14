@@ -379,54 +379,75 @@ function resetDashboard() {
   if (syncStatus) syncStatus.textContent = 'System Ready';
 }
 
+let fullCalendarInstance = null;
+
 function updateMeetings(events) {
-  const container = document.getElementById('meetingsList');
-  if (!events.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No upcoming meetings found.</p></div>';
-    return;
-  }
+  const container = document.getElementById('calendar');
+  if (!container) return;
   
   const now = new Date();
   // Filter out past events and sort
-  const upcoming = events
-    .filter(e => new Date(e.endTime) > now)
-    .sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
-    
-  if(!upcoming.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><p>No upcoming meetings found.</p></div>';
-    return;
+  const upcoming = events.filter(e => new Date(e.endTime) >= now)
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+  if (!fullCalendarInstance) {
+    fullCalendarInstance = new FullCalendar.Calendar(container, {
+      initialView: 'timeGridWeek',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'timeGridWeek,timeGridDay,dayGridMonth'
+      },
+      height: 600,
+      slotMinTime: '06:00:00',
+      slotMaxTime: '22:00:00',
+      allDaySlot: true,
+      events: [],
+      eventContent: function(arg) {
+        let italicEl = document.createElement('div');
+        italicEl.innerHTML = arg.event.title;
+        italicEl.style.fontSize = '0.85em';
+        italicEl.style.whiteSpace = 'normal';
+        italicEl.style.overflow = 'hidden';
+        let arrayOfDomNodes = [ italicEl ]
+        return { domNodes: arrayOfDomNodes }
+      }
+    });
+    fullCalendarInstance.render();
   }
 
-  container.innerHTML = upcoming.map(event => {
-    const start = new Date(event.startTime);
-    const end = new Date(event.endTime);
+  const fcEvents = upcoming.map(event => {
     const isGoogle = event.identity?.providerType?.startsWith('GOOGLE');
     const isSystem = event.isSystemGenerated || false;
-    const safeTitle = escapeHtml(event.title || 'Untitled');
-    const safeLocation = escapeHtml(event.location || '');
-    const startDateStr = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    const startTimeStr = start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-    const endTimeStr = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     
-    return `
-      <div class="meeting-card ${isSystem ? 'system-gen' : ''}">
-        <div class="meeting-time-box">
-          <span class="m-date">${startDateStr}</span>
-          <span class="m-time">${startTimeStr} - ${endTimeStr}</span>
-        </div>
-        <div class="meeting-info">
-          <div class="meeting-title">${safeTitle}</div>
-          <div class="meeting-details">
-            <span class="provider-badge ${isGoogle ? 'google' : 'microsoft'}">
-              ${isGoogle ? 'G' : 'M'}
-            </span>
-            ${safeLocation ? `<span class="m-loc">📍 ${safeLocation}</span>` : ''}
-            ${isSystem ? '<span class="sync-badge">🛡️ Protected Block</span>' : '<span class="sync-badge">✅ Synced</span>'}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
+    let bgColor = 'var(--surface-light)';
+    let textColor = 'var(--text-primary)';
+    let titlePrefix = '';
+    
+    if (isSystem) {
+      bgColor = 'var(--accent-emerald)';
+      titlePrefix = '🛡️ ';
+    } else if (isGoogle) {
+      bgColor = 'var(--accent-cyan)';
+      titlePrefix = 'G | ';
+    } else {
+      bgColor = 'var(--accent-indigo)';
+      titlePrefix = 'M | ';
+    }
+
+    return {
+      id: event.id,
+      title: titlePrefix + (event.title || 'Untitled'),
+      start: event.startTime,
+      end: event.endTime,
+      backgroundColor: bgColor,
+      borderColor: 'transparent',
+      textColor: textColor
+    };
+  });
+
+  fullCalendarInstance.removeAllEvents();
+  fullCalendarInstance.addEventSource(fcEvents);
 }
 
 // ---- Actions ----

@@ -229,12 +229,7 @@
           <span style="font-size:0.75rem;color:var(--text-muted);">Upcoming events across all connected accounts</span>
         </div>
         <div class="card-body">
-          <div id="meetingsList" style="display:flex; flex-direction:column; gap:10px;">
-            <div class="empty-state">
-              <div class="empty-icon">🗓️</div>
-              <p>No meetings found or calendars not connected.</p>
-            </div>
-          </div>
+          <div id="calendar"></div>
         </div>
       </div>
 
@@ -310,6 +305,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
