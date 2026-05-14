@@ -16,6 +16,7 @@ import logger from './utils/logger.js';
 import authRoutes from './routes/auth.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import calendarRoutes from './routes/calendar.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { renewExpiringWebhooks as renewGoogleWebhooks } from './services/google/webhook.service.js';
 import { renewExpiringWebhooks as renewMicrosoftWebhooks } from './services/microsoft/webhook.service.js';
 import rateLimit from 'express-rate-limit';
@@ -73,6 +74,7 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/user', calendarRoutes);  // User routes are in the same file
 app.use('/api/dashboard', calendarRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root route for sanity check
 app.get('/', (req, res) => {

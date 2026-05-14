@@ -125,6 +125,7 @@
         <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme" id="themeToggleBtn">🌙 Dark</button>
         <button class="btn btn-primary btn-sm" id="newEventBtn" style="display:none;" onclick="openEventModal()">+ New Event</button>
         <a href="assistant.html" class="btn btn-ghost btn-sm" id="assistantLink" style="display:none;">🤖 AI Assistant</a>
+        <a href="admin.html" class="btn btn-ghost btn-sm" id="adminLink" style="display:none; border: 1px solid var(--accent-indigo); color: var(--accent-indigo);">🔑 Super Admin</a>
         <div class="kbd-hint" title="Press Ctrl+K to search">⌘K</div>
         <div class="navbar-user" id="userInfo" style="display:none;">
           <div class="user-avatar" id="userAvatar">U</div>
@@ -172,7 +173,38 @@
         </div>
       </section>
 
-      <!-- Sync Pipeline Visualizer -->
+      <section class="pricing-section" id="pricing" style="padding: 100px 20px; text-align: center; background: var(--bg-primary);">
+        <h2 style="font-size: 2.5rem; margin-bottom: 40px; background: linear-gradient(to right, var(--accent-indigo), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SaaS Plans</h2>
+        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+          <!-- Free Trial -->
+          <div class="pricing-card" style="background: var(--bg-card); padding: 40px; border-radius: 20px; border: 1px solid var(--border-color); width: 300px;">
+            <h3 style="font-size: 1.25rem; margin-bottom: 10px;">Free Trial</h3>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 20px;">$0 <span style="font-size: 0.8rem; font-weight: 400;">/ 14 days</span></div>
+            <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 30px; color: var(--text-secondary); line-height: 2;">
+              <li>✓ 2 Calendar Connections</li>
+              <li>✓ Real-time Sync</li>
+              <li>✓ Command Palette</li>
+              <li>✓ AI Assistant (Basic)</li>
+            </ul>
+            <button class="btn btn-ghost" style="width: 100%;" onclick="scrollToAuth()">Start Trial</button>
+          </div>
+          <!-- Pro -->
+          <div class="pricing-card" style="background: var(--bg-card); padding: 40px; border-radius: 20px; border: 2px solid var(--accent-indigo); width: 300px; position: relative; transform: scale(1.05);">
+            <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--accent-indigo); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">MOST POPULAR</div>
+            <h3 style="font-size: 1.25rem; margin-bottom: 10px;">Pro</h3>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 20px;">$19 <span style="font-size: 0.8rem; font-weight: 400;">/ month</span></div>
+            <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 30px; color: var(--text-secondary); line-height: 2;">
+              <li>✓ Unlimited Connections</li>
+              <li>✓ Advanced Conflict Resolution</li>
+              <li>✓ AI Assistant (Gemini Pro)</li>
+              <li>✓ Custom Shadow Block Labels</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;" onclick="scrollToAuth()">Upgrade Now</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Footer (hidden on landing) -->
       <div class="card" style="margin-bottom: 16px;">
         <div class="card-header">
           <span class="card-title">⚙️ Sync Pipeline</span>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin | OpenCalendar</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .admin-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 40px; }
+    .user-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .user-table th, .user-table td { text-align: left; padding: 16px; border-bottom: 1px solid var(--border-color); }
+    .user-table th { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+    .badge-pro { background: rgba(99, 102, 241, 0.2); color: var(--accent-indigo); }
+    .badge-free { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
+    .action-btn { font-size: 0.75rem; padding: 6px 12px; }
+  </style>
+</head>
+<body class="theme-dark">
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">OpenCalendar Admin</a>
+    <div class="navbar-actions">
+      <a href="index.html" class="btn btn-ghost btn-sm">← Back to Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+    <h1 style="margin-bottom: 8px;">Super Admin Control</h1>
+    <p style="color: var(--text-muted); margin-bottom: 32px;">Manage global users, subscriptions, and platform configuration.</p>
+
+    <div class="stats-grid" id="adminStats">
+      <div class="card">
+        <div class="card-body">
+          <p style="font-size: 0.75rem; color: var(--text-muted);">TOTAL USERS</p>
+          <h2 id="statTotalUsers">--</h2>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p style="font-size: 0.75rem; color: var(--text-muted);">ACTIVE CONNECTIONS</p>
+          <h2 id="statTotalIdentities">--</h2>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p style="font-size: 0.75rem; color: var(--text-muted);">SYNCS (24H)</p>
+          <h2 id="statSyncs">--</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">User Management</span>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-ghost btn-sm" onclick="fetchAdminData()">Refresh</button>
+        </div>
+      </div>
+      <div class="card-body" style="overflow-x: auto;">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Identities</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

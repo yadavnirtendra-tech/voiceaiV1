@@ -23,6 +23,12 @@ model User {
   avatarUrl     String?
   timezone      String     @default("UTC")
   
+  // SaaS & Admin
+  isAdmin           Boolean          @default(false)
+  plan              Plan             @default(FREE_TRIAL)
+  subscriptionStatus String           @default("ACTIVE")
+  stripeCustomerId  String?
+  
   // Preferences
   conflictStrategy  ConflictStrategy @default(BLOCK_ALL)
   autoSyncEnabled   Boolean          @default(true)
@@ -39,6 +45,12 @@ model User {
   availabilitySlots AvailabilitySlot[]
 
   @@map("users")
+}
+
+enum Plan {
+  FREE_TRIAL
+  PRO
+  ENTERPRISE
 }
 
 enum ConflictStrategy {

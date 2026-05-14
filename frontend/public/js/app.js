@@ -231,6 +231,10 @@ function showAuthenticatedUI() {
   document.getElementById('newEventBtn').style.display = 'inline-flex';
   document.getElementById('assistantLink').style.display = 'inline-flex';
 
+  if (currentUser.isAdmin) {
+    document.getElementById('adminLink').style.display = 'inline-flex';
+  }
+
   if (currentUser.timezone) {
     document.getElementById('timezoneSelect').value = currentUser.timezone;
   }
@@ -816,3 +820,6 @@ window.addEventListener('keydown', (e) => {
 const originalEventContent = fullCalendarInstance?.getOption('eventContent');
 // I will apply this in a separate chunk to avoid complexity
 
+function scrollToAuth() {
+  document.getElementById(" authSection\).scrollIntoView({ behavior: \smooth\ });
+}
