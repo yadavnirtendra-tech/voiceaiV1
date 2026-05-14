@@ -8,6 +8,8 @@ import { apiLimiter } from '../middleware/rateLimiter.js';
 import { getAvailability, isSlotAvailable } from '../services/availability/globalProfile.js';
 import { fullSync } from '../services/sync/engine.js';
 import { users, identities, calendarEvents, shadowBlocks, syncLogs, webhookSubscriptions } from '../db/index.js';
+import * as googleService from '../services/google/calendar.service.js';
+import * as microsoftService from '../services/microsoft/calendar.service.js';
 import logger from '../utils/logger.js';
 
 const router = Router();
@@ -45,6 +47,38 @@ router.post('/sync', authenticate, apiLimiter, async (req, res) => {
     fullSync(req.user.id).catch(e => logger.error('Manual sync failed', { error: e.message }));
   } catch (error) {
     res.status(500).json({ error: 'Failed to start sync' });
+  }
+});
+
+/** POST /api/calendar/events - Create a new event manually */
+router.post('/events', authenticate, apiLimiter, async (req, res) => {
+  try {
+    const { identityId, summary, description, startTime, endTime, attendees } = req.body;
+    
+    if (!identityId || !summary || !startTime || !endTime) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const identity = await identities.findById(identityId);
+    if (!identity || identity.userId !== req.user.id) {
+      return res.status(404).json({ error: 'Identity not found' });
+    }
+
+    let result;
+    if (identity.providerType === 'GOOGLE') {
+      result = await googleService.createEvent(identity, { summary, description, startTime, endTime, attendees });
+    } else if (identity.providerType === 'MICROSOFT') {
+      result = await microsoftService.createEvent(identity, { summary, description, startTime, endTime, attendees });
+    }
+
+    res.json({ success: true, event: result });
+    
+    // Trigger a sync in background to propagate shadow blocks
+    fullSync(req.user.id).catch(e => logger.error('Post-creation sync failed', { error: e.message }));
+    
+  } catch (error) {
+    logger.error('Event creation failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to create event' });
   }
 });
 

@@ -178,6 +178,45 @@ export async function createShadowBlock(identity, eventData) {
 }
 
 /**
+ * Create a standard event in Outlook Calendar (User-Initiated)
+ * @param {Object} identity - Target Microsoft identity
+ * @param {Object} eventData - { summary, startTime, endTime, description, attendees }
+ * @returns {Object} Created event
+ */
+export async function createEvent(identity, eventData) {
+  const tz = eventData.timeZone || 'UTC';
+  const event = {
+    subject: eventData.summary,
+    body: {
+      contentType: 'HTML',
+      content: eventData.description || '',
+    },
+    start: {
+      dateTime: formatDateTimeTz(eventData.startTime, tz),
+      timeZone: tz,
+    },
+    end: {
+      dateTime: formatDateTimeTz(eventData.endTime, tz),
+      timeZone: tz,
+    },
+  };
+
+  if (eventData.attendees) {
+    event.attendees = eventData.attendees.map(email => ({
+      emailAddress: { address: email },
+      type: 'required',
+    }));
+  }
+
+  const result = await graphFetch(identity, '/me/events', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  });
+
+  return result;
+}
+
+/**
  * Update a Shadow Block event
  * @param {Object} identity - Target Microsoft identity
  * @param {string} eventId - Event ID to update

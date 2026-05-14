@@ -123,13 +123,15 @@
           <option value="Australia/Darwin">Darwin (ACST)</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme" id="themeToggleBtn">🌙 Dark</button>
+        <button class="btn btn-primary btn-sm" id="newEventBtn" style="display:none;" onclick="openEventModal()">+ New Event</button>
+        <a href="assistant.html" class="btn btn-ghost btn-sm" id="assistantLink" style="display:none;">🤖 AI Assistant</a>
+        <div class="kbd-hint" title="Press Ctrl+K to search">⌘K</div>
         <div class="navbar-user" id="userInfo" style="display:none;">
           <div class="user-avatar" id="userAvatar">U</div>
           <span id="userEmail"></span>
         </div>
         <button class="btn btn-ghost btn-sm" id="logoutBtn" style="display:none;" onclick="logout()">Logout</button>
       </div>
-      <div style="margin-left: 12px; font-size: 0.7rem; color: var(--text-muted); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-family: monospace;">⌘K Search</div>
     </nav>
     <!-- Breaking News Ticker (Newspaper only) -->
     <div class="breaking-ticker" id="breakingTicker">
@@ -353,6 +355,50 @@
 
   <!-- Toast -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Event Creation Modal -->
+  <div id="eventModal" class="modal-overlay" style="display:none;" onclick="closeEventModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="card-header">
+        <span class="card-title">📅 Create New Meeting</span>
+        <button class="btn btn-ghost btn-sm" onclick="closeEventModal('esc')">✕</button>
+      </div>
+      <div class="card-body">
+        <form id="eventForm" onsubmit="handleCreateEvent(event)" style="display:flex; flex-direction:column; gap:16px;">
+          <div class="form-group">
+            <label>Provider & Account</label>
+            <select id="eventIdentity" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label>Meeting Title</label>
+            <input type="text" id="eventSummary" class="form-control" placeholder="e.g., Weekly Sync" required>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label>Start Date & Time</label>
+              <input type="datetime-local" id="eventStart" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>End Date & Time</label>
+              <input type="datetime-local" id="eventEnd" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="eventDescription" class="form-control" rows="3" placeholder="Add meeting details..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Attendees (Comma separated emails)</label>
+            <input type="text" id="eventAttendees" class="form-control" placeholder="john@example.com, jane@example.com">
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
+            <button type="button" class="btn btn-ghost" onclick="closeEventModal('esc')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="eventSubmitBtn">Create & Sync</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Command Palette Modal -->
   <div id="commandPalette" class="modal-overlay" style="display:none;" onclick="closeCommandPalette(event)">

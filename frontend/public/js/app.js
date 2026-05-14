@@ -228,6 +228,9 @@ function showAuthenticatedUI() {
   userAvatar.textContent = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
   userEmail.textContent = currentUser.email || '';
   
+  document.getElementById('newEventBtn').style.display = 'inline-flex';
+  document.getElementById('assistantLink').style.display = 'inline-flex';
+
   if (currentUser.timezone) {
     document.getElementById('timezoneSelect').value = currentUser.timezone;
   }

@@ -145,6 +145,40 @@ export async function createShadowBlock(identity, eventData) {
 }
 
 /**
+ * Create a standard event in Google Calendar (User-Initiated)
+ * @param {Object} identity - Target Google identity
+ * @param {Object} eventData - { summary, startTime, endTime, description, attendees }
+ * @returns {Object} Created event
+ */
+export async function createEvent(identity, eventData) {
+  const calendar = await getCalendarService(identity);
+
+  const event = {
+    summary: eventData.summary,
+    description: eventData.description,
+    start: {
+      dateTime: new Date(eventData.startTime).toISOString(),
+      timeZone: eventData.timeZone || 'UTC',
+    },
+    end: {
+      dateTime: new Date(eventData.endTime).toISOString(),
+      timeZone: eventData.timeZone || 'UTC',
+    },
+  };
+
+  if (eventData.attendees) {
+    event.attendees = eventData.attendees.map(email => ({ email }));
+  }
+
+  const response = await calendar.events.insert({
+    calendarId: identity.calendarId || 'primary',
+    requestBody: event,
+  });
+
+  return response.data;
+}
+
+/**
  * Update a Shadow Block event
  * @param {Object} identity - Target Google identity
  * @param {string} eventId - Event ID to update
