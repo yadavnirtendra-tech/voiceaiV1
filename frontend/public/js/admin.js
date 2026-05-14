@@ -88,3 +88,8 @@ async function resetPassword(userId) {
     alert('Failed to trigger reset');
   }
 }
+
+function toggleStripe() {
+  const isEnabled = document.getElementById("stripeToggle").checked;
+  alert("Stripe Payments " + (isEnabled ? "Enabled" : "Disabled") + ". Admin overrides are now " + (isEnabled ? "restricted" : "active") + ".");
+}

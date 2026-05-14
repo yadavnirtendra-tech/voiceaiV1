@@ -821,5 +821,80 @@ const originalEventContent = fullCalendarInstance?.getOption('eventContent');
 // I will apply this in a separate chunk to avoid complexity
 
 function scrollToAuth() {
-  document.getElementById(" authSection\).scrollIntoView({ behavior: \smooth\ });
+  document.getElementById("authSection").scrollIntoView({ behavior: "smooth" });
 }
+
+// ---- Event Creation Modal ----
+function openEventModal() {
+  const modal = document.getElementById("eventModal");
+  modal.style.display = "flex";
+  
+  // Populate identities dropdown
+  const select = document.getElementById("eventIdentity");
+  const activeIdentities = currentUser.identities || [];
+  select.innerHTML = activeIdentities.map(id => 
+    `<option value="${id.id}">${id.providerType}: ${id.providerEmail}</option>`
+  ).join("");
+
+  // Set default times (next hour)
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  const start = new Date(now.getTime() + 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  
+  document.getElementById("eventStart").value = new Date(start.getTime() - start.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById("eventEnd").value = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+function closeEventModal(e) {
+  if (e === "esc" || (e.target && e.target.id === "eventModal")) {
+    document.getElementById("eventModal").style.display = "none";
+  }
+}
+
+async function handleCreateEvent(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById("eventSubmitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Creating...";
+
+  const payload = {
+    identityId: document.getElementById("eventIdentity").value,
+    summary: document.getElementById("eventSummary").value,
+    description: document.getElementById("eventDescription").value,
+    startTime: document.getElementById("eventStart").value,
+    endTime: document.getElementById("eventEnd").value,
+    attendees: document.getElementById("eventAttendees").value.split(",").map(s => s.trim()).filter(s => s)
+  };
+
+  try {
+    const res = await fetch("/api/calendar/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      credentials: "include"
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast("Meeting created & sync triggered!", "success");
+      closeEventModal("esc");
+      document.getElementById("eventForm").reset();
+      fetchDashboardData();
+    } else {
+      showToast(data.error || "Failed to create event", "error");
+    }
+  } catch (err) {
+    showToast("Event creation failed", "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Create & Sync";
+  }
+}
+
+// Ensure these are globally accessible
+window.openEventModal = openEventModal;
+window.closeEventModal = closeEventModal;
+window.handleCreateEvent = handleCreateEvent;
+window.scrollToAuth = scrollToAuth;
+window.toggleBossMode = toggleBossMode;
+window.purgeShadowBlocks = purgeShadowBlocks;

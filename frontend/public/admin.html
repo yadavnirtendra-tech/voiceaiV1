@@ -53,6 +53,26 @@
       </div>
     </div>
 
+    <div class="card" style="margin-bottom: 40px;">
+      <div class="card-header"><span class="card-title">⚙️ System Configuration</span></div>
+      <div class="card-body" style="display: flex; gap: 40px; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="stripeToggle" checked onchange="toggleStripe()">
+            <span class="slider"></span>
+          </label>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 600;">Enable Stripe Payments</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">When disabled, all upgrades are handled manually.</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button class="btn btn-ghost btn-sm" onclick="alert('Coupon creator coming soon!')">🎫 Create Coupon</button>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">Generate discount codes for marketing.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">
         <span class="card-title">User Management</span>
