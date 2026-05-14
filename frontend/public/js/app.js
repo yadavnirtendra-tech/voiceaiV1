@@ -147,6 +147,17 @@ function showUnauthenticatedUI() {
   document.getElementById('logoutBtn').style.display = 'none';
 }
 
+// ---- Connection Actions ----
+function connectGoogle() {
+  window.location.href = '/api/auth/google';
+}
+window.connectGoogle = connectGoogle;
+
+function connectMicrosoft() {
+  window.location.href = '/api/auth/microsoft';
+}
+window.connectMicrosoft = connectMicrosoft;
+
 async function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value;
