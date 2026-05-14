@@ -93,6 +93,12 @@ export const identities = {
       where: { userId, isActive: true },
     });
   },
+  findLatestByUser(userId, providerType) {
+    return prisma.identity.findFirst({
+      where: { userId, providerType },
+      orderBy: { updatedAt: 'desc' },
+    });
+  },
 };
 
 export const calendarEvents = {

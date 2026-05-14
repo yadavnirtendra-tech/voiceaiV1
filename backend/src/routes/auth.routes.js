@@ -179,11 +179,11 @@ router.get('/google/callback', async (req, res) => {
     }
 
     let userId = stateData.userId;
+    let identity;
     
     // If no user ID, this is a new sign-up or sign-in with Google
     if (!userId) {
       // We'll get the user info from Google in handleCallback
-      // For now, pass a null userId, handleCallback should handle it
       const tempIdentity = await googleAuth.handleCallback(code, null);
       
       // Check if user already exists by email
@@ -199,12 +199,10 @@ router.get('/google/callback', async (req, res) => {
       userId = user.id;
       
       // Link identity to the found/created user
-      await identities.update(tempIdentity.id, { userId });
+      identity = await identities.update(tempIdentity.id, { userId });
     } else {
-      await googleAuth.handleCallback(code, userId);
+      identity = await googleAuth.handleCallback(code, userId);
     }
-
-    const identity = await identities.findLatestByUser(userId, 'GOOGLE');
 
     // Register webhook for real-time sync
     try { await googleWebhook.registerWebhook(identity); } catch (e) { logger.warn('Webhook registration deferred', { error: e.message }); }
@@ -267,6 +265,7 @@ router.get('/microsoft/callback', async (req, res) => {
     }
 
     let userId = stateData.userId;
+    let identity;
 
     if (!userId) {
       const tempIdentity = await msAuth.handleCallback(code, null);
@@ -279,12 +278,10 @@ router.get('/microsoft/callback', async (req, res) => {
         });
       }
       userId = user.id;
-      await identities.update(tempIdentity.id, { userId });
+      identity = await identities.update(tempIdentity.id, { userId });
     } else {
-      await msAuth.handleCallback(code, userId);
+      identity = await msAuth.handleCallback(code, userId);
     }
-
-    const identity = await identities.findLatestByUser(userId, 'MICROSOFT');
 
     try { await msWebhook.registerWebhook(identity); } catch (e) { logger.warn('MS Webhook registration deferred', { error: e.message }); }
     fullSync(userId).catch(e => logger.error('Initial sync failed', { error: e.message }));
