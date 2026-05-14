@@ -66,7 +66,7 @@ export async function optionalAuth(req, res, next) {
 
     if (token) {
       const decoded = jwt.verify(token, config.jwt.secret);
-      req.user = await users.findById(decoded.userId);
+      req.user = await users.findWithIdentities(decoded.userId);
     } else {
       req.user = null;
     }

@@ -127,8 +127,8 @@ async function processEvent(externalEvent, identity) {
       userId: identity.userId,
       externalCalendarId: identity.calendarId,
       title: title || 'Untitled',
-      startTime: new Date(startTime).toISOString(),
-      endTime: new Date(endTime).toISOString(),
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
       status: 'CONFIRMED',
       busyStatus,
       etag: externalEvent.etag || externalEvent.changeKey,
@@ -137,8 +137,8 @@ async function processEvent(externalEvent, identity) {
     // Update data
     {
       title: title || 'Untitled',
-      startTime: new Date(startTime).toISOString(),
-      endTime: new Date(endTime).toISOString(),
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
       status: 'CONFIRMED',
       busyStatus,
       etag: externalEvent.etag || externalEvent.changeKey,
@@ -189,7 +189,7 @@ export async function fullSync(userId) {
         }
       }
       for (const event of events) {
-        await processEvent(event, identity);
+        await processEvent(identity, event.id, event);
       }
     } catch (error) {
       logger.error('Full sync error for identity', { identityId: identity.id, error: error.message });
