@@ -188,10 +188,23 @@
 
     <main class="main-content">
 
-      <!-- Hero -->
-      <section class="hero" id="heroSection">
-        <h1 id="heroTitle">Unified Calendar Intelligence</h1>
-        <p id="heroSubtitle">Real-time cross-platform calendar synchronization. Your single source of truth for availability.</p>
+      <!-- Connection Hub -->
+      <section class="card" id="connectionHub" style="margin-bottom: 24px; border-left: 4px solid var(--accent-indigo);">
+        <div class="card-header">
+          <span class="card-title">🔌 Connection Hub</span>
+          <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--accent-indigo); font-size: 0.65rem;">STEP 1: CONNECT ACCOUNTS</span>
+        </div>
+        <div class="card-body" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-right: auto; max-width: 400px;">
+            To start syncing, connect at least one Google and one Microsoft account. We'll handle the rest.
+          </p>
+          <button class="btn btn-primary" onclick="connectGoogle()" style="gap: 8px; background: #fff; color: #000; border: 1px solid #ddd;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_\"G\"_Logo.svg" width="16" alt="G"> Connect Google
+          </button>
+          <button class="btn btn-primary" onclick="connectMicrosoft()" style="gap: 8px; background: #00a4ef; color: #fff; border: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="16" alt="M"> Connect Outlook
+          </button>
+        </div>
       </section>
 
       <!-- Stats Grid -->
