@@ -84,14 +84,16 @@ router.post('/register', authLimiter, async (req, res) => {
       email: normalizedEmail,
       passwordHash,
       displayName: safeName,
+      plan: 'PRO',
     });
 
     const token = generateToken(user.id);
     res.cookie('auth_token', token, { 
       httpOnly: true, 
       secure: config.nodeEnv === 'production', 
-      sameSite: 'lax', 
-      maxAge: 7 * 24 * 60 * 60 * 1000 
+      sameSite: config.nodeEnv === 'production' ? 'None' : 'Lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     res.status(201).json({ success: true, user: { id: user.id, email: user.email, displayName: user.displayName } });
@@ -129,8 +131,9 @@ router.post('/login', authLimiter, async (req, res) => {
     res.cookie('auth_token', token, { 
       httpOnly: true, 
       secure: config.nodeEnv === 'production', 
-      sameSite: 'lax', 
-      maxAge: 7 * 24 * 60 * 60 * 1000 
+      sameSite: config.nodeEnv === 'production' ? 'None' : 'Lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
     });
 
     res.json({ 
@@ -146,9 +149,9 @@ router.post('/login', authLimiter, async (req, res) => {
 // ============ Google OAuth ============
 
 /** GET /api/auth/google - Start Google OAuth flow */
-router.get('/google', authLimiter, authenticate, async (req, res) => {
+router.get('/google', authLimiter, optionalAuth, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id || null;
     const state = createSignedState({ userId, provider: 'google', timestamp: Date.now() });
     const authUrl = googleAuth.getAuthUrl(state);
     res.redirect(authUrl);
@@ -165,7 +168,7 @@ router.get('/google/callback', async (req, res) => {
     if (!code || !state) return res.redirect(`${config.frontendUrl}?error=missing_params`);
 
     const stateData = verifySignedState(state);
-    if (!stateData || !stateData.userId) {
+    if (!stateData) {
       logger.warn('Google callback: invalid or tampered state parameter');
       return res.redirect(`${config.frontendUrl}?error=invalid_state`);
     }
@@ -175,23 +178,49 @@ router.get('/google/callback', async (req, res) => {
       return res.redirect(`${config.frontendUrl}?error=state_expired`);
     }
 
-    const identity = await googleAuth.handleCallback(code, stateData.userId);
-
-    // Update user email if it was a temp placeholder
-    const user = await users.findById(stateData.userId);
-    if (user?.email?.startsWith('pending-')) {
-      await users.update(stateData.userId, { email: identity.providerEmail, displayName: identity.providerEmail.split('@')[0] });
+    let userId = stateData.userId;
+    
+    // If no user ID, this is a new sign-up or sign-in with Google
+    if (!userId) {
+      // We'll get the user info from Google in handleCallback
+      // For now, pass a null userId, handleCallback should handle it
+      const tempIdentity = await googleAuth.handleCallback(code, null);
+      
+      // Check if user already exists by email
+      let user = await users.findByEmail(tempIdentity.providerEmail);
+      if (!user) {
+        // Create new user
+        user = await users.create({
+          email: tempIdentity.providerEmail,
+          displayName: tempIdentity.providerEmail.split('@')[0],
+          plan: 'PRO',
+        });
+      }
+      userId = user.id;
+      
+      // Link identity to the found/created user
+      await identities.update(tempIdentity.id, { userId });
+    } else {
+      await googleAuth.handleCallback(code, userId);
     }
+
+    const identity = await identities.findLatestByUser(userId, 'GOOGLE');
 
     // Register webhook for real-time sync
     try { await googleWebhook.registerWebhook(identity); } catch (e) { logger.warn('Webhook registration deferred', { error: e.message }); }
 
     // Trigger initial full sync
-    fullSync(stateData.userId).catch(e => logger.error('Initial sync failed', { error: e.message }));
+    fullSync(userId).catch(e => logger.error('Initial sync failed', { error: e.message }));
 
     // Generate JWT and set cookie
-    const token = generateToken(stateData.userId);
-    res.cookie('auth_token', token, { httpOnly: true, secure: config.nodeEnv === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    const token = generateToken(userId);
+    res.cookie('auth_token', token, { 
+      httpOnly: true, 
+      secure: config.nodeEnv === 'production', 
+      sameSite: config.nodeEnv === 'production' ? 'None' : 'Lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
     res.redirect(`${config.frontendUrl}?connected=google&success=true`);
   } catch (error) {
     logger.error('Google callback failed', { error: error.message });
@@ -202,9 +231,9 @@ router.get('/google/callback', async (req, res) => {
 // ============ Microsoft OAuth ============
 
 /** GET /api/auth/microsoft - Start Microsoft OAuth flow */
-router.get('/microsoft', authLimiter, authenticate, async (req, res) => {
+router.get('/microsoft', authLimiter, optionalAuth, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id || null;
     const state = createSignedState({ userId, provider: 'microsoft', timestamp: Date.now() });
     const authUrl = await msAuth.getAuthUrl(state);
     res.redirect(authUrl);
@@ -227,7 +256,7 @@ router.get('/microsoft/callback', async (req, res) => {
     if (!code || !state) return res.redirect(`${config.frontendUrl}?error=missing_params`);
 
     const stateData = verifySignedState(state);
-    if (!stateData || !stateData.userId) {
+    if (!stateData) {
       logger.warn('Microsoft callback: invalid or tampered state parameter');
       return res.redirect(`${config.frontendUrl}?error=invalid_state`);
     }
@@ -237,18 +266,37 @@ router.get('/microsoft/callback', async (req, res) => {
       return res.redirect(`${config.frontendUrl}?error=state_expired`);
     }
 
-    const identity = await msAuth.handleCallback(code, stateData.userId);
+    let userId = stateData.userId;
 
-    const user = await users.findById(stateData.userId);
-    if (user?.email?.startsWith('pending-')) {
-      await users.update(stateData.userId, { email: identity.providerEmail, displayName: identity.providerEmail.split('@')[0] });
+    if (!userId) {
+      const tempIdentity = await msAuth.handleCallback(code, null);
+      let user = await users.findByEmail(tempIdentity.providerEmail);
+      if (!user) {
+        user = await users.create({
+          email: tempIdentity.providerEmail,
+          displayName: tempIdentity.providerEmail.split('@')[0],
+          plan: 'PRO',
+        });
+      }
+      userId = user.id;
+      await identities.update(tempIdentity.id, { userId });
+    } else {
+      await msAuth.handleCallback(code, userId);
     }
 
-    try { await msWebhook.registerWebhook(identity); } catch (e) { logger.warn('MS Webhook registration deferred', { error: e.message }); }
-    fullSync(stateData.userId).catch(e => logger.error('Initial sync failed', { error: e.message }));
+    const identity = await identities.findLatestByUser(userId, 'MICROSOFT');
 
-    const token = generateToken(stateData.userId);
-    res.cookie('auth_token', token, { httpOnly: true, secure: config.nodeEnv === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    try { await msWebhook.registerWebhook(identity); } catch (e) { logger.warn('MS Webhook registration deferred', { error: e.message }); }
+    fullSync(userId).catch(e => logger.error('Initial sync failed', { error: e.message }));
+
+    const token = generateToken(userId);
+    res.cookie('auth_token', token, { 
+      httpOnly: true, 
+      secure: config.nodeEnv === 'production', 
+      sameSite: config.nodeEnv === 'production' ? 'None' : 'Lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
     res.redirect(`${config.frontendUrl}?connected=microsoft&success=true`);
   } catch (error) {
     logger.error('Microsoft callback failed', { error: error.message, stack: error.stack });

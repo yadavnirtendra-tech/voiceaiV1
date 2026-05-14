@@ -57,12 +57,12 @@ export function getAuthUrl(state) {
 /**
  * Exchange authorization code for tokens and create/update identity
  * @param {string} code - Authorization code from callback
- * @param {string} userId - User ID
+ * @param {string} userId - User ID (can be null for new sign-ups)
  * @returns {Object} Created/updated identity
  */
 export async function handleCallback(code, userId) {
   const client = getMsalClient();
-
+  
   // Exchange code for tokens
   const tokenResponse = await client.acquireTokenByCode({
     code,
@@ -100,6 +100,23 @@ export async function handleCallback(code, userId) {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const calendarInfo = await calendarResponse.json();
+
+  // If userId is null, return the profile info
+  if (!userId) {
+    const identity = await identities.create({
+      providerType,
+      providerEmail: email,
+      providerAccountId: userInfo.id,
+      accessTokenEnc: accessTokenData.encrypted,
+      refreshTokenEnc: cacheCombined,
+      tokenIv: accessTokenData.iv,
+      tokenExpiresAt: tokenResponse.expiresOn ? new Date(tokenResponse.expiresOn) : null,
+      calendarId: calendarInfo.id,
+      calendarName: calendarInfo.name || 'Calendar',
+      userId: 'pending-' + Date.now(), // Temporary placeholder
+    });
+    return identity;
+  }
 
   // Upsert identity in database
   const identity = await identities.upsert(

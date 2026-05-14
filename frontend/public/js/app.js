@@ -25,6 +25,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 // ---- Theme ----
 const THEMES = ['dark', 'light', 'newspaper'];
 const THEME_ICONS = { dark: '🌙 Dark', light: '🌿 Green', newspaper: '📰 Gazette' };
@@ -79,6 +84,7 @@ function checkUrlParams() {
     const provider = params.get('connected');
     showToast(`${capitalize(provider || 'Calendar')} connected successfully!`, 'success');
     window.history.replaceState({}, '', '/');
+    checkAuthStatus(); // Re-verify auth immediately
   }
   if (params.get('error')) {
     showToast(`Connection failed: ${params.get('error')}`, 'error');
@@ -205,6 +211,55 @@ async function logout() {
   showUnauthenticatedUI();
 }
 window.logout = logout;
+
+function switchTab(type) {
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  
+  if (!loginForm || !registerForm) return;
+
+  if (type === 'login') {
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+  } else {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    tabLogin.classList.remove('active');
+    tabRegister.classList.add('active');
+  }
+}
+window.switchTab = switchTab;
+
+function refreshData() {
+  showToast('Refreshing data...');
+  fetchDashboardData();
+}
+window.refreshData = refreshData;
+
+async function updateTimezone(tz) {
+  try {
+    const res = await fetch('/api/user/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timezone: tz }),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Timezone updated to ${tz}`);
+      fetchDashboardData();
+    } else {
+      showToast(data.error || 'Failed to update timezone', 'error');
+    }
+  } catch (e) {
+    showToast('Failed to update timezone', 'error');
+  }
+}
+window.updateTimezone = updateTimezone;
 
 // ---- Dashboard Data ----
 async function fetchDashboardData() {

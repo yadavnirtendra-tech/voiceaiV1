@@ -40,7 +40,7 @@ export function getAuthUrl(state) {
 /**
  * Exchange authorization code for tokens and create/update identity
  * @param {string} code - Authorization code from callback
- * @param {string} userId - User ID
+ * @param {string} userId - User ID (can be null for new sign-ups)
  * @returns {Object} Created/updated identity
  */
 export async function handleCallback(code, userId) {
@@ -71,6 +71,25 @@ export async function handleCallback(code, userId) {
   const calendarService = google.calendar({ version: 'v3', auth: oauth2Client });
   const { data: calendarList } = await calendarService.calendarList.list();
   const primaryCalendar = calendarList.items.find(c => c.primary) || calendarList.items[0];
+
+  // If userId is null, we return the profile info so the caller can create/find the user
+  if (!userId) {
+    // Create a temporary identity record or just return the data
+    // We'll create a "orphan" identity that will be linked immediately
+    const identity = await identities.create({
+      providerType,
+      providerEmail: email,
+      providerAccountId: userInfo.id,
+      accessTokenEnc: accessTokenData.encrypted,
+      refreshTokenEnc: refreshTokenCombined,
+      tokenIv: accessTokenData.iv,
+      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+      calendarId: primaryCalendar?.id || 'primary',
+      calendarName: primaryCalendar?.summary || 'Primary Calendar',
+      userId: 'pending-' + Date.now(), // Temporary placeholder
+    });
+    return identity;
+  }
 
   // Upsert identity in database
   const identity = await identities.upsert(

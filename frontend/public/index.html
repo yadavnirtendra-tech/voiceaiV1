@@ -20,12 +20,12 @@
   <!-- ========== LANDING PAGE ========== -->
   <div id="landingPage" style="display:block;">
     <header style="padding: 100px 20px; text-align: center; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.12) 0%, transparent 70%);">
-      <h1 style="font-size: 3.2rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.03em; background: linear-gradient(135deg, #FAFAFA, #6366F1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Intelligence</h1>
+      <h1 style="font-size: 3.2rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.03em; background: linear-gradient(135deg, #FAFAFA, #6366F1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Synchronization</h1>
       <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 640px; margin: 0 auto 40px; line-height: 1.7;">
         OpenCalendar is a professional synchronization engine that creates a "Single Source of Truth" across your Google and Microsoft calendars. Protect your availability automatically.
       </p>
       <div style="display: flex; justify-content: center; gap: 16px;">
-        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Get Started Free</button>
+        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Get Started Forever Free</button>
         <button class="btn btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Learn More</button>
       </div>
     </header>
@@ -106,29 +106,24 @@
       </div>
     </div>
 
-    <!-- Pricing Section (Moved here from dashboard) -->
-    <section class="pricing-section" id="pricing" style="padding: 60px 20px; text-align: center;">
-      <h2 style="font-size: 2.2rem; margin-bottom: 30px; background: linear-gradient(to right, var(--accent-indigo), var(--accent-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Choose Your Plan</h2>
-      <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
-        <div class="pricing-card" style="background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color); width: 280px;">
-          <h3>Free Trial</h3>
-          <div style="font-size: 1.8rem; font-weight: 700; margin: 15px 0;">$0</div>
-          <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary);">
-            <li>✓ 2 Calendar Connections</li>
-            <li>✓ Real-time Sync</li>
-            <li>✓ Command Palette</li>
-          </ul>
-          <button class="btn btn-ghost" style="width: 100%;" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})">Get Started</button>
+    <!-- Hero Value Prop (Replaces Pricing) -->
+    <section class="value-prop" style="padding: 60px 20px; text-align: center; background: rgba(99, 102, 241, 0.03); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+      <h2 style="font-size: 2rem; margin-bottom: 16px; color: var(--text-primary);">OpenCalendar is 100% Free</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 30px;">
+        No subscriptions, no hidden costs, and no credit cards required. Our mission is to make calendar synchronization accessible to everyone.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 20px;">
+        <div style="text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-indigo);">∞</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Unlimited Syncs</div>
         </div>
-        <div class="pricing-card" style="background: var(--bg-card); padding: 30px; border-radius: 16px; border: 2px solid var(--accent-indigo); width: 280px; transform: scale(1.05);">
-          <h3>Pro</h3>
-          <div style="font-size: 1.8rem; font-weight: 700; margin: 15px 0;">$19</div>
-          <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary);">
-            <li>✓ Unlimited Connections</li>
-            <li>✓ AI Calendar Assistant</li>
-            <li>✓ Conflict Shield</li>
-          </ul>
-          <button class="btn btn-primary" style="width: 100%;" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})">Upgrade Now</button>
+        <div style="text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);">∞</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Unlimited Accounts</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);">∞</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Zero Cost</div>
         </div>
       </div>
     </section>
@@ -510,6 +505,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script src="/js/app.js"></script>
+  <script src="/js/app.js?v=1.0.1"></script>
 </body>
 </html>
