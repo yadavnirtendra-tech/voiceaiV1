@@ -451,14 +451,15 @@ function updateMeetings(events) {
         center: 'title',
         right: 'timeGridWeek,timeGridDay,dayGridMonth'
       },
-      height: 'auto',
-      contentHeight: 560,
+      height: 600,
       slotMinTime: '06:00:00',
-      slotMaxTime: '22:00:00',
+      slotMaxTime: '21:00:00',
       slotDuration: '00:30:00',
       expandRows: true,
       allDaySlot: false,
       nowIndicator: true,
+      scrollTime: '08:00:00',
+      stickyHeaderDates: true,
       events: [],
       eventContent: function(arg) {
         let italicEl = document.createElement('div');

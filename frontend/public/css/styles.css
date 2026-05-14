@@ -448,10 +448,16 @@ select.form-control option { background: var(--bg-card-solid); color: var(--text
 }
 .fc-theme-standard .fc-scrollgrid { border-color: var(--border-color) !important; border-radius: var(--radius-md) !important; overflow: hidden !important; }
 .fc .fc-timegrid-slot-minor { border-top-style: dashed !important; border-color: rgba(255,255,255,0.02) !important; }
-.fc .fc-timegrid-slot { height: 1.5em !important; }
-.fc .fc-view-harness { min-height: 520px !important; }
+.fc .fc-timegrid-slot { height: 2.2em !important; }
+.fc .fc-view-harness { min-height: 500px !important; }
 .fc .fc-toolbar { margin-bottom: 12px !important; }
 .fc .fc-toolbar .fc-button { padding: 4px 10px !important; font-size: 0.72rem !important; }
+.fc .fc-scroller { scroll-behavior: smooth !important; }
+.fc .fc-scroller::-webkit-scrollbar { width: 5px; }
+.fc .fc-scroller::-webkit-scrollbar-track { background: transparent; }
+.fc .fc-scroller::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+.fc .fc-scroller::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
+.fc .fc-daygrid-body { cursor: default !important; }
 .fc .fc-col-header-cell-cushion { color: var(--text-secondary) !important; font-weight: 600 !important; font-size: 0.78rem !important; }
 .fc-direction-ltr .fc-timegrid-slot-label-frame { text-align: right; color: var(--text-muted) !important; font-size: 0.72rem !important; font-variant-numeric: tabular-nums; }
 .fc .fc-timegrid-now-indicator-line { border-color: var(--accent-rose) !important; }
