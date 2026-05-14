@@ -37,48 +37,43 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
       };
 
       const existing = await shadowBlocks.findActiveBySourceAndTarget(sourceEvent.id, target.id);
-      if (existing) {
+      let block = existing;
+      let ext;
+
+      if (block) {
         try {
-          // Always try to update to ensure it exists and is accurate
-          await updateShadowBlock(existing, target, sourceEvent);
-          results.push(existing);
-          continue;
+          await updateShadowBlock(block, target, sourceEvent);
         } catch (err) {
-          const isDeleted = err.message?.includes('404') || err.code === 404 || err.code === 410 || err.message?.includes('deleted') || err.message?.includes('not found');
-          if (!isDeleted) {
-            throw err; // Bubble up unexpected errors
+          const isDeleted = err.message?.includes('404') || err.code === 404 || err.code === 410 || err.message?.includes('not found');
+          if (isDeleted) {
+            logger.info('Shadow block was manually deleted, will recreate', { targetId: target.id });
+            block = null; // Recreate
+          } else {
+            throw err;
           }
-          // If deleted, we recreate it below instead of continuing
-          logger.info('Shadow block was manually deleted, recreating...', { targetId: target.id });
         }
       }
 
-      let ext;
-      if (isGT) ext = await googleCal.createShadowBlock(target, data);
-      else if (isMT) ext = await msCal.createShadowBlock(target, data);
-      else continue;
-
-      let block;
-      if (existing) {
-        block = await shadowBlocks.update(existing.id, {
-          targetExternalId: ext.id,
-          startTime: sourceEvent.startTime,
-          endTime: sourceEvent.endTime,
-          status: 'ACTIVE'
-        });
-      } else {
-        block = await shadowBlocks.create({
-          userId,
-          sourceEventId: sourceEvent.id,
-          sourceIdentityId: sourceIdentity.id,
-          targetIdentityId: target.id,
-          targetExternalId: ext.id,
-          title: SHADOW_BLOCK_TITLE,
-          startTime: sourceEvent.startTime,
-          endTime: sourceEvent.endTime,
-          status: 'ACTIVE',
-        });
+      if (!block) {
+        if (isGT) ext = await googleCal.createShadowBlock(target, data);
+        else if (isMT) ext = await msCal.createShadowBlock(target, data);
+        
+        if (ext) {
+          block = await shadowBlocks.create({
+            userId,
+            sourceEventId: sourceEvent.id,
+            sourceIdentityId: sourceIdentity.id,
+            targetIdentityId: target.id,
+            targetExternalId: ext.id,
+            title: SHADOW_BLOCK_TITLE,
+            startTime: sourceEvent.startTime,
+            endTime: sourceEvent.endTime,
+            status: 'ACTIVE',
+          });
+        }
       }
+
+      if (block) {
 
       await syncLogs.create({
         userId,
@@ -87,11 +82,15 @@ export async function createShadowBlocks(userId, sourceEvent, sourceIdentity) {
         status: 'COMPLETED',
         sourceEventId: sourceEvent.id,
         targetEventId: block.id,
-        externalEventId: ext.id,
+        externalEventId: ext ? ext.id : (existing ? existing.targetExternalId : null),
         providerType: target.providerType,
         direction: getSyncDirection(sourceIdentity.providerType, target.providerType),
         completedAt: new Date(),
-        metadata: { sourceEmail: sourceIdentity.providerEmail, targetEmail: target.providerEmail },
+        metadata: { 
+          sourceEmail: sourceIdentity.providerEmail, 
+          targetEmail: target.providerEmail,
+          isUpdate: !!existing 
+        },
       });
       results.push(block);
     } catch (error) {

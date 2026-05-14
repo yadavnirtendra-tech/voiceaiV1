@@ -114,6 +114,9 @@ async function processEvent(externalEvent, identity) {
 
   if (!startTime || !endTime) return; // Skip events without times
 
+  // Skip past events
+  if (new Date(endTime) < new Date()) return;
+
   // Skip free/transparent events
   if (busyStatus === 'FREE') return;
 
@@ -159,7 +162,15 @@ async function processEvent(externalEvent, identity) {
   }
 
   // STATE: SHADOW_BLOCK - Create blocks on all other providers
-  await createShadowBlocks(identity.userId, calEvent, identity);
+  const results = await createShadowBlocks(identity.userId, calEvent, identity);
+  
+  if (results.length > 0) {
+    await syncLogs.create({
+      userId: identity.userId, identityId: identity.id, action: 'EVENT_SYNCED', status: 'COMPLETED',
+      externalEventId: eventId, providerType: identity.providerType, completedAt: new Date(),
+      metadata: { shadowBlocksCreated: results.length }
+    });
+  }
 }
 
 /**
