@@ -66,6 +66,30 @@ router.post('/users/:id/reset-password', async (req, res) => {
   }
 });
 
+/** DELETE /api/admin/users/:id - Delete User Account */
+router.delete('/users/:id', async (req, res) => {
+  try {
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'User permanently deleted' });
+  } catch (error) {
+    logger.error('Admin user delete failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+/** POST /api/admin/purge-all - Emergency Purge (deletes all non-admin users) */
+router.post('/purge-all', async (req, res) => {
+  try {
+    const result = await prisma.user.deleteMany({
+      where: { isAdmin: false }
+    });
+    res.json({ success: true, message: `Emergency purge complete. Deleted ${result.count} users.` });
+  } catch (error) {
+    logger.error('Emergency purge failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to purge users' });
+  }
+});
+
 /** GET /api/admin/stats - Global SaaS Stats */
 router.get('/stats', async (req, res) => {
   try {

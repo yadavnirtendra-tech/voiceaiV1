@@ -101,8 +101,10 @@
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <script>
-    // Minimal Admin Logic for UI display
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
@@ -110,25 +112,151 @@
       localStorage.setItem('theme', next);
       document.getElementById('themeToggleBtn').textContent = next === 'dark' ? '☀️' : '🌙';
     }
+    
+    // Set Initial Theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeToggleBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
     setInterval(() => {
       document.getElementById('liveClock').textContent = new Date().toLocaleTimeString();
     }, 1000);
     
-    // Simulate initial data load
-    setTimeout(() => {
-      document.getElementById('statTotalUsers').textContent = "1,024";
-      document.getElementById('statTotalIdentities').textContent = "2,058";
-      document.getElementById('statSyncs').textContent = "45.2K";
-      document.getElementById('userTableBody').innerHTML = `
-        <tr style="border-bottom:1px solid var(--border-color);">
-          <td style="padding:16px; font-weight:600;">admin@opencalendar.com</td>
-          <td style="padding:16px;"><span class="badge badge-admin">Super Admin</span></td>
-          <td style="padding:16px;">2 Active</td>
-          <td style="padding:16px;">May 14, 2026</td>
-          <td style="padding:16px;"><button class="btn btn-ghost btn-sm">Manage</button></td>
-        </tr>
-      `;
-    }, 1500);
+    function showToast(msg, type='success') {
+      const container = document.getElementById('toastContainer') || document.body;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = type === 'success' ? `✅ ${msg}` : `⚠️ ${msg}`;
+      if (!document.getElementById('toastContainer')) {
+         toast.style.position = 'fixed'; toast.style.bottom = '20px'; toast.style.right = '20px';
+         toast.style.background = 'var(--bg-card)'; toast.style.padding = '12px 20px';
+         toast.style.border = '1px solid var(--border-color)'; toast.style.borderRadius = '8px';
+         toast.style.zIndex = '9999';
+      }
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    async function fetchAdminData() {
+      document.getElementById('userTableBody').innerHTML = '<tr><td colspan="5" style="padding:30px; text-align:center; color:var(--text-muted);">Loading user intelligence...</td></tr>';
+      try {
+        const statsRes = await fetch('/api/admin/stats', { credentials: 'include' });
+        if (statsRes.status === 401 || statsRes.status === 403) {
+           window.location.href = '/'; // Kick out non-admins
+           return;
+        }
+        const statsData = await statsRes.json();
+        if (statsData.success) {
+          document.getElementById('statTotalUsers').textContent = statsData.stats.totalUsers.toLocaleString();
+          document.getElementById('statTotalIdentities').textContent = statsData.stats.totalIdentities.toLocaleString();
+          document.getElementById('statSyncs').textContent = statsData.stats.syncsLast24h.toLocaleString();
+        }
+
+        const usersRes = await fetch('/api/admin/users', { credentials: 'include' });
+        const usersData = await usersRes.json();
+        
+        if (usersData.success && usersData.users.length > 0) {
+          document.getElementById('userTableBody').innerHTML = usersData.users.map(u => `
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:16px; font-weight:600;">
+                ${u.email}
+                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">ID: ${u.id.substring(0,8)}...</div>
+              </td>
+              <td style="padding:16px;">
+                ${u.isAdmin ? '<span class="badge badge-admin">Super Admin</span>' : '<span class="badge" style="background:var(--bg-primary);">User</span>'}
+              </td>
+              <td style="padding:16px;">
+                ${u._count.identities} Active<br>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${u._count.calendarEvents} Events</span>
+              </td>
+              <td style="padding:16px; font-size:0.85rem;">
+                ${new Date(u.createdAt).toLocaleDateString()}
+              </td>
+              <td style="padding:16px;">
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="resetPassword('${u.id}')" title="Reset Password">🔑 Reset</button>
+                  <button class="btn btn-ghost btn-sm" onclick="toggleAdmin('${u.id}', ${!u.isAdmin})" title="Toggle Admin">⭐ ${u.isAdmin ? 'Demote' : 'Promote'}</button>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--accent-danger); border-color:var(--accent-danger);" onclick="deleteUser('${u.id}')" title="Delete User">🗑️ Delete</button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          document.getElementById('userTableBody').innerHTML = '<tr><td colspan="5" style="padding:30px; text-align:center; color:var(--text-muted);">No users found.</td></tr>';
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Failed to load admin data', 'error');
+      }
+    }
+
+    async function resetPassword(userId) {
+      if (!confirm('Are you sure you want to force reset this user\\'s password?')) return;
+      const res = await fetch(`/api/admin/users/${userId}/reset-password`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Password reset successful. Check console for temp password.');
+        console.log(data.message);
+        alert(data.message);
+      } else {
+        showToast(data.error || 'Failed to reset', 'error');
+      }
+    }
+
+    async function toggleAdmin(userId, makeAdmin) {
+      if (!confirm(`Are you sure you want to ${makeAdmin ? 'PROMOTE' : 'DEMOTE'} this user?`)) return;
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAdmin: makeAdmin }),
+        credentials: 'include'
+      });
+      if (res.ok) {
+        showToast(`User ${makeAdmin ? 'promoted to Admin' : 'demoted to User'}`);
+        fetchAdminData();
+      } else {
+        showToast('Failed to update role', 'error');
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('WARNING: Are you absolutely sure you want to permanently delete this user and ALL their data?')) return;
+      const promptRes = prompt('Type DELETE to confirm:');
+      if (promptRes !== 'DELETE') return;
+      
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        showToast('User permanently deleted', 'success');
+        fetchAdminData();
+      } else {
+        showToast('Failed to delete user', 'error');
+      }
+    }
+
+    async function emergencyPurge() {
+      if (!confirm('CRITICAL WARNING: This will delete ALL users except Super Admins. Proceed?')) return;
+      const promptRes = prompt('Type PURGE ALL to confirm:');
+      if (promptRes !== 'PURGE ALL') return;
+      
+      const res = await fetch('/api/admin/purge-all', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        fetchAdminData();
+      } else {
+        showToast(data.error || 'Purge failed', 'error');
+      }
+    }
+
+    // Attach to UI Button
+    document.querySelector('.btn-danger').onclick = emergencyPurge;
+
+    // Load Data on Mount
+    window.onload = fetchAdminData;
   </script>
 </body>
 </html>
