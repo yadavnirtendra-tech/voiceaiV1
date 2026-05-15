@@ -217,6 +217,35 @@
             </div>
           </div>
 
+          <!-- Shield Settings -->
+          <div class="glass-panel">
+            <div class="card-header">
+              <span class="card-title">🛡️ Active Shielding (Alien Tech)</span>
+            </div>
+            <div class="card-body">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div>
+                  <div style="font-weight:600; font-size:0.95rem;">Auto-Decline Conflicts</div>
+                  <div style="font-size:0.8rem; color:var(--text-secondary);">Automatically decline overlapping invites</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleAutoDecline" onchange="updateSettings('autoDeclineConflicts', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-weight:600; font-size:0.95rem;">Conflict Alerts</div>
+                  <div style="font-size:0.8rem; color:var(--text-secondary);">Show notifications for sync conflicts</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleAlerts" onchange="updateSettings('alertOnConflicts', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <!-- Activity Feed -->
           <div class="glass-panel">
             <div class="card-header">

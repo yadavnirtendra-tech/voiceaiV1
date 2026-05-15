@@ -32,6 +32,8 @@ model User {
   // Preferences
   conflictStrategy  ConflictStrategy @default(BLOCK_ALL)
   autoSyncEnabled   Boolean          @default(true)
+  autoDeclineConflicts Boolean       @default(false)
+  alertOnConflicts     Boolean       @default(true)
   
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

@@ -276,3 +276,23 @@ export function isSystemGenerated(event) {
     p.id?.includes(SYSTEM_TAG_KEY) && p.value === SYSTEM_TAG_VALUE
   );
 }
+
+/**
+ * Auto-decline an event (Alien Tech Shield)
+ * @param {Object} identity - Target Microsoft identity
+ * @param {string} eventId - Event ID to decline
+ */
+export async function declineEvent(identity, eventId) {
+  try {
+    await graphFetch(identity, `/me/events/${eventId}/decline`, {
+      method: 'POST',
+      body: JSON.stringify({
+        comment: 'Auto-declined by OpenCalendar Active Shielding due to a scheduling conflict.',
+        sendResponse: true
+      }),
+    });
+    logger.info('Microsoft event auto-declined via Active Shield', { identityId: identity.id, eventId });
+  } catch (error) {
+    logger.error('Failed to auto-decline Microsoft event', { identityId: identity.id, eventId, error: error.message });
+  }
+}

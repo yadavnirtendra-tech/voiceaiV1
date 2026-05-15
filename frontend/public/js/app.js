@@ -104,6 +104,16 @@ function showDashboard() {
     const tzSelect = document.getElementById('timezoneSelect');
     if (tzSelect) tzSelect.value = currentUser.timezone;
   }
+
+  // Initialize toggles
+  const toggleAutoDecline = document.getElementById('toggleAutoDecline');
+  if (toggleAutoDecline && currentUser.autoDeclineConflicts !== undefined) {
+    toggleAutoDecline.checked = currentUser.autoDeclineConflicts;
+  }
+  const toggleAlerts = document.getElementById('toggleAlerts');
+  if (toggleAlerts && currentUser.alertOnConflicts !== undefined) {
+    toggleAlerts.checked = currentUser.alertOnConflicts;
+  }
 }
 
 function switchTab(type) {
@@ -281,6 +291,22 @@ async function updateTimezone(tz) {
   }
 }
 window.updateTimezone = updateTimezone;
+
+async function updateSettings(key, value) {
+  const payload = {};
+  payload[key] = value;
+  const res = await fetch('/api/user/settings', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload), credentials: 'include'
+  });
+  if (res.ok) {
+    showToast(`Setting updated!`);
+    currentUser[key] = value;
+  } else {
+    showToast(`Failed to update setting`, 'error');
+  }
+}
+window.updateSettings = updateSettings;
 
 // ---- Pipeline Animation ----
 async function triggerSync() {

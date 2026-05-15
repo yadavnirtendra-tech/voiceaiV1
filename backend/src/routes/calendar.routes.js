@@ -189,11 +189,13 @@ router.get('/profile', authenticate, async (req, res) => {
 /** PATCH /api/user/settings */
 router.patch('/settings', authenticate, async (req, res) => {
   try {
-    const { conflictStrategy, autoSyncEnabled, timezone } = req.body;
+    const { conflictStrategy, autoSyncEnabled, timezone, autoDeclineConflicts, alertOnConflicts } = req.body;
     const updateData = {};
     if (conflictStrategy) updateData.conflictStrategy = conflictStrategy;
     if (typeof autoSyncEnabled === 'boolean') updateData.autoSyncEnabled = autoSyncEnabled;
     if (timezone) updateData.timezone = timezone;
+    if (typeof autoDeclineConflicts === 'boolean') updateData.autoDeclineConflicts = autoDeclineConflicts;
+    if (typeof alertOnConflicts === 'boolean') updateData.alertOnConflicts = alertOnConflicts;
 
     const user = await users.update(req.user.id, updateData);
     res.json({ success: true, user });

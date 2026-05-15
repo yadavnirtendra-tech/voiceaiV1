@@ -108,6 +108,16 @@ export async function checkConflicts(userId, startTime, endTime, excludeIdentity
  */
 export async function resolveConflict(userId, newEvent, conflicts) {
   const user = await users.findById(userId);
+  
+  // ALIEN TECH: Active Shielding (Auto-Decline Overlaps)
+  if (user?.autoDeclineConflicts) {
+    return {
+      action: 'DECLINE',
+      reason: 'Active Shielding: Auto-Decline Conflicts is enabled and a schedule overlap was detected.',
+      conflicts
+    };
+  }
+
   const strategy = user?.conflictStrategy || 'BLOCK_ALL';
 
   switch (strategy) {

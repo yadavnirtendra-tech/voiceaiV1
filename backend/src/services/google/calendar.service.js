@@ -242,3 +242,22 @@ export function isSystemGenerated(event) {
   if (!props) return false;
   return props[SYSTEM_TAG_KEY] === SYSTEM_TAG_VALUE;
 }
+
+/**
+ * Auto-decline an event (Alien Tech Shield)
+ * @param {Object} identity - Target Google identity
+ * @param {string} eventId - Event ID to decline
+ */
+export async function declineEvent(identity, eventId) {
+  const calendar = await getCalendarService(identity);
+  try {
+    await calendar.events.delete({
+      calendarId: identity.calendarId || 'primary',
+      eventId,
+      sendUpdates: 'all'
+    });
+    logger.info('Google event auto-declined via Active Shield', { identityId: identity.id, eventId });
+  } catch (error) {
+    logger.error('Failed to auto-decline Google event', { identityId: identity.id, eventId, error: error.message });
+  }
+}

@@ -162,6 +162,25 @@ async function processEvent(externalEvent, identity) {
 
   if (hasConflict) {
     const resolution = await resolveConflict(identity.userId, calEvent, conflicts);
+    
+    if (resolution.action === 'DECLINE') {
+      // 🛸 Alien Tech: Active Shielding Auto-Decline
+      if (isGoogle) {
+        await googleCal.declineEvent(identity, eventId);
+      } else {
+        await msCal.declineEvent(identity, eventId);
+      }
+      
+      // We must mark the event as CANCELLED in our DB so we don't track it
+      await calendarEvents.update(calEvent.id, { status: 'CANCELLED' });
+      
+      await syncLogs.create({
+        userId: identity.userId, identityId: identity.id, action: 'CONFLICT_RESOLVED', status: 'COMPLETED',
+        externalEventId: eventId, providerType: identity.providerType, metadata: { resolution: 'AUTO_DECLINED', conflicts }, completedAt: new Date(),
+      });
+      return;
+    }
+    
     if (resolution.action === 'SKIP') {
       await syncLogs.create({
         userId: identity.userId, identityId: identity.id, action: 'CONFLICT_DETECTED', status: 'SKIPPED',
