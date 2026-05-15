@@ -1,329 +1,150 @@
-// Prisma Schema for OpenCalendar
-// Multi-tenant Unified Calendar Synchronization Engine
+// Prisma Schema — VoiceForge AI
+// Self-hosted Voice AI Platform
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
-// USER & AUTHENTICATION
+// VOICE AGENTS - Configurable AI personas
 // ============================================
-
-model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  displayName   String?
-  passwordHash  String?    // For local auth (optional - can use OAuth-only)
-  avatarUrl     String?
-  timezone      String     @default("UTC")
+model Agent {
+  id              String   @id @default(uuid())
+  name            String
+  systemPrompt    String   @default("You are a helpful voice assistant. Be concise and natural.")
+  greeting        String   @default("Hello! How can I help you today?")
+  voice           String   @default("af_heart")
+  language        String   @default("en")
+  llmModel        String   @default("llama3.2")
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(150)
+  interruptible   Boolean  @default(true)
+  silenceTimeout  Int      @default(1500)  // ms before considering turn complete
+  endCallPhrases  String   @default("goodbye,bye,end call,hang up")  // comma-separated
   
-  // SaaS & Admin
-  isAdmin           Boolean          @default(false)
-  plan              Plan             @default(FREE_TRIAL)
-  subscriptionStatus String           @default("ACTIVE")
-  stripeCustomerId  String?
+  // Retail / Business features
+  transferNumber  String?  // Number to transfer to if needed
+  knowledgeBase   String?  // JSON string of FAQ/knowledge items
+  webhookUrl      String?  // Webhook to call on events
+  webhookEvents   String   @default("call.started,call.ended,transcript.complete")
   
-  // Preferences
-  conflictStrategy  ConflictStrategy @default(BLOCK_ALL)
-  autoSyncEnabled   Boolean          @default(true)
-  autoDeclineConflicts Boolean       @default(false)
-  alertOnConflicts     Boolean       @default(true)
+  // Metadata
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
   // Relations
-  identities        Identity[]
-  calendarEvents    CalendarEvent[]
-  shadowBlocks      ShadowBlock[]
-  syncLogs          SyncLog[]
-  webhookSubs       WebhookSubscription[]
-  availabilitySlots AvailabilitySlot[]
-
-  @@map("users")
-}
-
-enum Plan {
-  FREE_TRIAL
-  PRO
-  ENTERPRISE
-}
-
-enum ConflictStrategy {
-  BLOCK_ALL        // Block on all providers when busy on any
-  PRIORITY_BASED   // User-defined provider priority
-  MANUAL_RESOLVE   // Notify user for manual resolution
+  calls           Call[]
+  phoneNumbers    PhoneNumber[]
 }
 
 // ============================================
-// CALENDAR IDENTITIES (Connected Accounts)
+// CALLS - Every voice interaction tracked
 // ============================================
-
-model Identity {
-  id               String       @id @default(uuid())
-  userId           String
-  providerType     ProviderType
-  providerEmail    String       // email associated with this provider
-  providerAccountId String?     // External ID from provider
+model Call {
+  id              String   @id @default(uuid())
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
   
-  // Encrypted OAuth Tokens (AES-256-GCM)
-  accessTokenEnc   String       @db.Text
-  refreshTokenEnc  String?      @db.Text
-  tokenExpiresAt   DateTime?
-  tokenIv          String       // Initialization vector for AES
+  // Call metadata
+  direction       String   @default("inbound")  // inbound | outbound | browser
+  status          String   @default("ringing")    // ringing | active | ended | failed
+  callerNumber    String?
+  calledNumber    String?
   
-  // Sync State
-  latestSyncToken  String?      @db.Text  // Google syncToken / MS deltaLink
-  lastSyncedAt     DateTime?
-  isActive         Boolean      @default(true)
-  isPrimary        Boolean      @default(false)
+  // Twilio
+  twilioCallSid   String?  @unique
+  twilioStreamSid String?
   
-  // Calendar-specific
-  calendarId       String?      // Google calendarId or Outlook calendar ID
-  calendarName     String?
+  // Timing
+  startedAt       DateTime @default(now())
+  answeredAt      DateTime?
+  endedAt         DateTime?
+  durationMs      Int      @default(0)
   
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-
+  // AI Metrics
+  totalTokens     Int      @default(0)
+  sttLatencyMs    Int      @default(0)   // Average STT latency
+  llmLatencyMs    Int      @default(0)   // Average LLM latency  
+  ttsLatencyMs    Int      @default(0)   // Average TTS latency
+  totalLatencyMs  Int      @default(0)   // Average total pipeline latency
+  
+  // Cost tracking (should be $0 for self-hosted)
+  costUsd         Float    @default(0)
+  
   // Relations
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  calendarEvents   CalendarEvent[]
-  shadowBlocks     ShadowBlock[]
-  syncLogs         SyncLog[]
-  webhookSubs      WebhookSubscription[]
-
-  @@unique([userId, providerType, providerEmail])
-  @@map("identities")
-}
-
-enum ProviderType {
-  GOOGLE_PERSONAL   // @gmail.com
-  GOOGLE_WORKSPACE  // @company.com (Google Workspace)
-  MICROSOFT_PERSONAL // @outlook.com, @hotmail.com
-  MICROSOFT_365     // @enterprise.com (M365 Business)
+  messages        Message[]
+  
+  @@index([agentId])
+  @@index([status])
+  @@index([startedAt])
 }
 
 // ============================================
-// CALENDAR EVENTS (Canonical Events)
+// MESSAGES - Full conversation transcript
 // ============================================
-
-model CalendarEvent {
-  id                String       @id @default(uuid())
-  userId            String
-  identityId        String
+model Message {
+  id          String   @id @default(uuid())
+  callId      String
+  call        Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
   
-  // Provider-side identifiers
-  externalEventId   String       // Event ID from Google/Microsoft
-  externalCalendarId String?
+  role        String   // user | assistant | system
+  content     String
   
-  // Event Data
-  title             String
-  description       String?
-  location          String?
-  startTime         DateTime
-  endTime           DateTime
-  isAllDay          Boolean      @default(false)
-  status            EventStatus  @default(CONFIRMED)
-  busyStatus        BusyStatus   @default(BUSY)
+  // Latency breakdown
+  sttMs       Int      @default(0)
+  llmMs       Int      @default(0)
+  ttsMs       Int      @default(0)
   
-  // Sync Metadata
-  syncOrigin        String?      // "calendarsync-ai-system" for system-generated
-  isSystemGenerated Boolean      @default(false)
-  etag              String?      // For change detection
-  rawPayload        Json?        // Original provider payload
+  createdAt   DateTime @default(now())
   
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-
-  // Relations
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  identity          Identity     @relation(fields: [identityId], references: [id], onDelete: Cascade)
-  shadowBlocks      ShadowBlock[] @relation("SourceEvent")
-
-  @@unique([identityId, externalEventId])
-  @@index([userId, startTime, endTime])
-  @@index([syncOrigin])
-  @@map("calendar_events")
-}
-
-enum EventStatus {
-  CONFIRMED
-  TENTATIVE
-  CANCELLED
-}
-
-enum BusyStatus {
-  BUSY
-  FREE
-  TENTATIVE
-  OUT_OF_OFFICE
-  WORKING_ELSEWHERE
+  @@index([callId])
 }
 
 // ============================================
-// SHADOW BLOCKS (System-Generated Blockers)
+// PHONE NUMBERS - Twilio number <-> Agent mapping
 // ============================================
-
-model ShadowBlock {
-  id                String       @id @default(uuid())
-  userId            String
+model PhoneNumber {
+  id          String   @id @default(uuid())
+  number      String   @unique
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  label       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
   
-  // Source: The original event that triggered this block
-  sourceEventId     String
-  sourceIdentityId  String
-  
-  // Target: Where the block was created
-  targetIdentityId  String
-  targetExternalId  String?      // The event ID created in the target provider
-  
-  // Block Details
-  title             String       @default("Reserved (CalendarSync)")
-  startTime         DateTime
-  endTime           DateTime
-  status            ShadowStatus @default(ACTIVE)
-  
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-
-  // Relations
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceEvent       CalendarEvent @relation("SourceEvent", fields: [sourceEventId], references: [id], onDelete: Cascade)
-  sourceIdentity    Identity     @relation(fields: [sourceIdentityId], references: [id], onDelete: Cascade)
-
-  @@unique([sourceEventId, targetIdentityId])
-  @@index([userId, startTime, endTime])
-  @@map("shadow_blocks")
-}
-
-enum ShadowStatus {
-  ACTIVE
-  CANCELLED
-  EXPIRED
-  ERROR
+  @@index([agentId])
 }
 
 // ============================================
-// SYNC LOG (Audit Trail)
+// KNOWLEDGE BASE - RAG-lite document storage
 // ============================================
-
-model SyncLog {
-  id              String       @id @default(uuid())
-  userId          String
-  identityId      String?
+model KnowledgeItem {
+  id          String   @id @default(uuid())
+  agentId     String
+  category    String   @default("general")
+  question    String
+  answer      String
+  keywords    String   @default("")  // comma-separated for fast search
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
-  action          SyncAction
-  status          SyncStatus   @default(PENDING)
-  
-  // Event references
-  sourceEventId   String?
-  targetEventId   String?
-  externalEventId String?
-  
-  // Details
-  providerType    ProviderType?
-  direction       SyncDirection?
-  metadata        Json?        // Additional context
-  errorMessage    String?
-  
-  startedAt       DateTime     @default(now())
-  completedAt     DateTime?
-
-  // Relations
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  identity        Identity?    @relation(fields: [identityId], references: [id], onDelete: SetNull)
-
-  @@index([userId, startedAt])
-  @@index([externalEventId])
-  @@map("sync_logs")
-}
-
-enum SyncAction {
-  WEBHOOK_RECEIVED
-  EVENT_CREATED
-  EVENT_UPDATED
-  EVENT_DELETED
-  SHADOW_CREATED
-  SHADOW_DELETED
-  CONFLICT_DETECTED
-  CONFLICT_RESOLVED
-  TOKEN_REFRESHED
-  FULL_SYNC
-  LOOP_PREVENTED
-}
-
-enum SyncStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  SKIPPED
-}
-
-enum SyncDirection {
-  GOOGLE_TO_MICROSOFT
-  MICROSOFT_TO_GOOGLE
-  GOOGLE_TO_GOOGLE
-  MICROSOFT_TO_MICROSOFT
-  INBOUND
-  OUTBOUND
+  @@index([agentId])
+  @@index([category])
 }
 
 // ============================================
-// WEBHOOK SUBSCRIPTIONS
+// SYSTEM SETTINGS
 // ============================================
-
-model WebhookSubscription {
-  id              String       @id @default(uuid())
-  userId          String
-  identityId      String
-  
-  providerType    ProviderType
-  subscriptionId  String       // Channel ID (Google) or Subscription ID (Microsoft)
-  resourceId      String?      // Google resource ID
-  
-  expiresAt       DateTime
-  isActive        Boolean      @default(true)
-  
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  // Relations
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  identity        Identity     @relation(fields: [identityId], references: [id], onDelete: Cascade)
-
-  @@unique([subscriptionId])
-  @@index([expiresAt])
-  @@map("webhook_subscriptions")
-}
-
-// ============================================
-// GLOBAL AVAILABILITY SLOTS (Computed View)
-// ============================================
-
-model AvailabilitySlot {
-  id          String       @id @default(uuid())
-  userId      String
-  
-  startTime   DateTime
-  endTime     DateTime
-  status      BusyStatus   @default(BUSY)
-  
-  // Source tracking
-  sourceProvider  ProviderType?
-  sourceEventId   String?
-  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, startTime, endTime])
-  @@map("availability_slots")
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

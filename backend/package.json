@@ -1,34 +1,32 @@
 {
-  "name": "calendarsync-ai",
-  "version": "2.0.0",
-  "description": "Multi-tenant Unified Calendar Sync Engine with PostgreSQL, Conflict Resolution & Shadow Blocking",
+  "name": "voiceforge-ai",
+  "version": "1.0.0",
+  "description": "VoiceForge - Self-hosted zero-cost Voice AI platform with local LLM, STT, TTS. VAPI killer.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "postinstall": "prisma generate",
-    "test": "node --test tests/**/*.test.js",
-    "test:unit": "node --test tests/unit/**/*.test.js",
-    "test:integration": "node --test tests/integration/**/*.test.js"
+    "setup": "node scripts/setup.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
-    "@azure/msal-node": "^2.16.0",
-    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@prisma/client": "^5.22.0",
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
-    "googleapis": "^144.0.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
     "prisma": "^5.22.0",
     "uuid": "^11.0.5",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "ws": "^8.18.0",
+    "twilio": "^5.4.0",
+    "cookie-parser": "^1.4.7"
   }
 }

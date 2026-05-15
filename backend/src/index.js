@@ -1,32 +1,41 @@
 /**
- * OpenCalendar - Main Entry Point
- * Express server with webhook listeners and cron jobs
+ * VoiceForge AI - Main Entry Point
+ * Self-hosted Voice AI platform with local LLM, STT, TTS
+ * Zero cost. Unlimited minutes. Natural human voice.
  */
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import cron from 'node-cron';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { URL } from 'url';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 import config from './config/env.js';
 import logger from './utils/logger.js';
-import authRoutes from './routes/auth.routes.js';
-import webhookRoutes from './routes/webhook.routes.js';
-import calendarRoutes from './routes/calendar.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import { renewExpiringWebhooks as renewGoogleWebhooks } from './services/google/webhook.service.js';
-import { renewExpiringWebhooks as renewMicrosoftWebhooks } from './services/microsoft/webhook.service.js';
-import rateLimit from 'express-rate-limit';
+import voiceRoutes from './routes/voice.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import { handleMediaStream } from './services/twilio/twilio.service.js';
+import {
+  createSession,
+  processTextInput,
+  processAudioChunk,
+  endSession,
+  getActiveSessions,
+} from './services/voice/pipeline.service.js';
+import { warmupModel } from './services/llm/ollama.service.js';
+import { synthesize, wavToMulaw } from './services/tts/kokoro.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = createServer(app);
 
-// ============ Trust Proxy for Railway/Cloudflare ============
+// ============ Trust Proxy ============
 app.set('trust proxy', 1);
 
 // ============ Middleware ============
@@ -37,17 +46,17 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https:", "https://www.gstatic.com"],
-      connectSrc: ["'self'", "https://autocalender-production.up.railway.app", "https://opencalender.site"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws://localhost:*", "wss://localhost:*", config.apiBaseUrl],
+      mediaSrc: ["'self'", "blob:", "data:"],
     },
   },
 }));
 app.use(cors({
-  origin: config.nodeEnv === 'production' 
+  origin: config.nodeEnv === 'production'
     ? [config.frontendUrl, config.apiBaseUrl]
-    : [config.frontendUrl, 'http://localhost:3000', 'http://localhost:5173'],
+    : true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
 app.use(morgan('short', {
   stream: { write: (message) => logger.info(message.trim()) },
@@ -56,84 +65,198 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ============ API Routes ============
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
-});
-
-// Apply the rate limiting middleware to API calls
-app.use('/api/', apiLimiter);
+// ============ Static Frontend ============
+app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
 // ============ API Routes ============
-app.use('/api/auth', authRoutes);
-app.use('/api/webhook', webhookRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/user', calendarRoutes);  // User routes are in the same file
-app.use('/api/dashboard', calendarRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/voice', voiceRoutes);
+app.use('/api/health', healthRoutes);
 
-// Root route for sanity check
+// Root redirect to dashboard
 app.get('/', (req, res) => {
-  res.send(`
-    <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0a0e1a; color: #fff; margin: 0;">
-      <div style="text-align: center; padding: 40px; background: #111827; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <h1 style="color: #6366f1;">🚀 OpenCalendar Backend</h1>
-        <p style="color: #94a3b8;">Status: <span style="color: #10b981;">Online & Secure</span></p>
-        <p style="font-size: 0.9rem; color: #64748b;">The API is functioning correctly. Access the dashboard via your frontend URL.</p>
-      </div>
-    </body>
-  `);
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    service: 'OpenCalendar API',
-    environment: config.nodeEnv,
-    timestamp: new Date().toISOString(),
-    uptime: `${Math.floor(process.uptime())}s`,
-  });
+  res.sendFile(path.join(__dirname, '../../frontend/public/index.html'));
 });
 
 // ============ Error Handler ============
 app.use((err, req, res, next) => {
   logger.error('Unhandled error', { error: err.message, stack: err.stack, path: req.path });
-  
-  const isProduction = config.nodeEnv === 'production';
-  const statusCode = err.statusCode || 500;
-  
-  res.status(statusCode).json({ 
+  res.status(err.statusCode || 500).json({
     success: false,
-    error: isProduction ? 'Internal server error' : err.message,
-    ...(isProduction ? {} : { stack: err.stack })
+    error: config.nodeEnv === 'production' ? 'Internal server error' : err.message,
   });
 });
 
-// ============ Cron Jobs ============
-// Renew webhooks every hour
-cron.schedule('0 * * * *', async () => {
-  logger.info('Running webhook renewal cron');
-  try {
-    await renewGoogleWebhooks();
-    await renewMicrosoftWebhooks();
-  } catch (error) {
-    logger.error('Webhook renewal cron failed', { error: error.message });
+// ============ WebSocket Server ============
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+
+  if (pathname === '/api/voice/twilio/stream') {
+    // Twilio media stream
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      handleMediaStream(ws, request);
+    });
+  } else if (pathname === '/api/voice/browser') {
+    // Browser WebRTC/WebSocket voice session
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      handleBrowserVoiceSession(ws, request);
+    });
+  } else {
+    socket.destroy();
   }
 });
 
+/**
+ * Handle browser-based voice sessions
+ * Protocol: JSON messages over WebSocket
+ */
+async function handleBrowserVoiceSession(ws, request) {
+  let session = null;
+
+  ws.on('message', async (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+
+      switch (msg.type) {
+        case 'start': {
+          // Start a new voice session
+          const { agentId } = msg;
+          if (!agentId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'agentId required' }));
+            return;
+          }
+
+          session = await createSession({
+            agentId,
+            direction: 'browser',
+          });
+
+          // Set up callbacks
+          session.onAudioResponse = (audioBuffer, text) => {
+            // Send audio as binary frame
+            if (ws.readyState === 1) {
+              ws.send(audioBuffer);
+            }
+          };
+
+          session.onTextResponse = (text, isFinal) => {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'assistant_text',
+                text,
+                isFinal,
+              }));
+            }
+          };
+
+          session.onTranscript = (data) => {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'transcript',
+                ...data,
+              }));
+            }
+          };
+
+          session.onSessionEnd = (reason) => {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({ type: 'session_ended', reason }));
+            }
+          };
+
+          // Send session info
+          ws.send(JSON.stringify({
+            type: 'session_started',
+            sessionId: session.id,
+            agent: {
+              name: session.agent.name,
+              voice: session.agent.voice,
+              greeting: session.agent.greeting,
+            },
+          }));
+
+          // Send greeting audio
+          try {
+            const { audioBuffer } = await synthesize(session.agent.greeting, {
+              voice: session.agent.voice,
+            });
+            ws.send(audioBuffer);
+            ws.send(JSON.stringify({
+              type: 'assistant_text',
+              text: session.agent.greeting,
+              isFinal: true,
+            }));
+          } catch (err) {
+            logger.error('Failed to send greeting', { error: err.message });
+          }
+          break;
+        }
+
+        case 'text': {
+          // Text input from browser (user typed or Web Speech API result)
+          if (session && msg.text) {
+            await processTextInput(session.id, msg.text);
+          }
+          break;
+        }
+
+        case 'audio': {
+          // Audio chunk from browser (PCM16 or mulaw)
+          if (session && msg.data) {
+            const audioBuffer = Buffer.from(msg.data, 'base64');
+            await processAudioChunk(session.id, audioBuffer, msg.format || 'pcm16');
+          }
+          break;
+        }
+
+        case 'end': {
+          if (session) {
+            await endSession(session.id, 'user_ended');
+          }
+          break;
+        }
+      }
+    } catch (err) {
+      logger.error('Browser WebSocket message error', { error: err.message });
+      if (ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'error', message: err.message }));
+      }
+    }
+  });
+
+  ws.on('close', async () => {
+    if (session) {
+      await endSession(session.id, 'browser_disconnected');
+    }
+  });
+
+  ws.on('error', (err) => {
+    logger.error('Browser WebSocket error', { error: err.message });
+  });
+}
+
 // ============ Start Server ============
-app.listen(config.port, () => {
-  logger.info(`🚀 OpenCalendar running on port ${config.port}`);
-  logger.info(`📊 Dashboard: ${config.apiBaseUrl}`);
-  logger.info(`🔗 Google OAuth: ${config.apiBaseUrl}/api/auth/google`);
-  logger.info(`🔗 Microsoft OAuth: ${config.apiBaseUrl}/api/auth/microsoft`);
-  logger.info(`📡 Google Webhook: ${config.apiBaseUrl}/api/webhook/google`);
-  logger.info(`📡 Microsoft Webhook: ${config.apiBaseUrl}/api/webhook/microsoft`);
+server.listen(config.port, async () => {
+  logger.info('');
+  logger.info('╔══════════════════════════════════════════════════╗');
+  logger.info('║         🎙️  VoiceForge AI - Running            ║');
+  logger.info('║         Zero-Cost Self-Hosted Voice AI          ║');
+  logger.info('╚══════════════════════════════════════════════════╝');
+  logger.info('');
+  logger.info(`🌐 Dashboard:    ${config.apiBaseUrl}`);
+  logger.info(`📡 Voice WS:     ws://localhost:${config.port}/api/voice/browser`);
+  logger.info(`📞 Twilio WS:    ws://localhost:${config.port}/api/voice/twilio/stream`);
+  logger.info(`🔧 Health:       ${config.apiBaseUrl}/api/health`);
+  logger.info('');
+  logger.info(`🧠 LLM:  Ollama @ ${config.ollamaBaseUrl} (${config.ollamaModel})`);
+  logger.info(`🗣️  TTS:  Kokoro @ ${config.kokoroTtsUrl} (${config.kokoroVoice})`);
+  logger.info(`👂 STT:  Whisper @ ${config.whisperSttUrl} (${config.whisperModel})`);
+  logger.info(`📞 Twilio: ${config.twilioEnabled ? 'Configured ✅' : 'Not configured (phone calls disabled)'}`);
+  logger.info('');
+
+  // Warm up LLM model
+  warmupModel().catch(() => {});
 });
 
 export default app;
