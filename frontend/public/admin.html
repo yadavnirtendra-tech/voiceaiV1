@@ -72,7 +72,10 @@
         </div>
       </div>
       <div style="flex:1;"></div>
-      <button class="btn btn-ghost" style="color:var(--accent-danger); border: 1px solid var(--accent-danger);" onclick="emergencyPurge()">EMERGENCY PURGE</button>
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-ghost" style="color:var(--accent-warning); border: 1px solid var(--accent-warning);" onclick="purgeTestUsers()">CLEAR TEST USERS</button>
+        <button class="btn btn-ghost" style="color:var(--accent-danger); border: 1px solid var(--accent-danger);" onclick="emergencyPurge()">EMERGENCY PURGE</button>
+      </div>
     </div>
 
     <div class="glass-panel" style="margin-top: 32px;">
@@ -247,6 +250,18 @@
       if (promptRes !== 'PURGE ALL') return;
       
       const res = await fetch('/api/admin/purge-all', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        fetchAdminData();
+      } else {
+        showToast(data.error || 'Purge failed', 'error');
+      }
+    }
+
+    async function purgeTestUsers() {
+      if (!confirm('Are you sure you want to delete all testuser-* accounts? This cannot be undone.')) return;
+      const res = await fetch('/api/admin/purge-test-users', { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (res.ok) {
         showToast(data.message, 'success');

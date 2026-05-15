@@ -147,6 +147,19 @@ router.post('/purge-all', async (req, res) => {
   }
 });
 
+/** POST /api/admin/purge-test-users - Delete all 'testuser-*' accounts */
+router.post('/purge-test-users', async (req, res) => {
+  try {
+    const result = await prisma.user.deleteMany({
+      where: { email: { startsWith: 'testuser-' } }
+    });
+    res.json({ success: true, message: `Successfully deleted ${result.count} test users.` });
+  } catch (error) {
+    logger.error('Test user purge failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to purge test users' });
+  }
+});
+
 /** GET /api/admin/stats - Global SaaS Stats */
 router.get('/stats', async (req, res) => {
   try {
