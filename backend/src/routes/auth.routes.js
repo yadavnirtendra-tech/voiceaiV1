@@ -64,6 +64,11 @@ function verifySignedState(state) {
 /** POST /api/auth/register - Create new account */
 router.post('/register', authLimiter, async (req, res) => {
   try {
+    const { getPlatformSettings } = await import('../utils/platformSettings.js');
+    if (getPlatformSettings().systemLockdown) {
+      return res.status(403).json({ error: 'SYSTEM LOCKDOWN: New registrations are currently disabled by the Super Admin.' });
+    }
+
     const { email, password, displayName } = req.body;
 
     const validationErrors = validateRegistration(email, password, displayName);
@@ -189,6 +194,12 @@ router.get('/google/callback', async (req, res) => {
       // Check if user already exists by email
       let user = await users.findByEmail(tempIdentity.providerEmail);
       if (!user) {
+        const { getPlatformSettings } = await import('../utils/platformSettings.js');
+        if (getPlatformSettings().systemLockdown) {
+          // Rollback identity
+          await identities.delete(tempIdentity.id);
+          return res.redirect(`${config.frontendUrl}?error=system_lockdown`);
+        }
         // Create new user
         user = await users.create({
           email: tempIdentity.providerEmail,
@@ -271,6 +282,12 @@ router.get('/microsoft/callback', async (req, res) => {
       const tempIdentity = await msAuth.handleCallback(code, null);
       let user = await users.findByEmail(tempIdentity.providerEmail);
       if (!user) {
+        const { getPlatformSettings } = await import('../utils/platformSettings.js');
+        if (getPlatformSettings().systemLockdown) {
+          // Rollback identity
+          await identities.delete(tempIdentity.id);
+          return res.redirect(`${config.frontendUrl}?error=system_lockdown`);
+        }
         user = await users.create({
           email: tempIdentity.providerEmail,
           displayName: tempIdentity.providerEmail.split('@')[0],

@@ -63,7 +63,7 @@
     <div class="glass-panel" style="margin-top: 32px; display: flex; gap: 40px; align-items: center; padding:24px; border-left: 4px solid var(--accent-danger);">
       <div style="display: flex; align-items: center; gap: 16px;">
         <label class="switch">
-          <input type="checkbox" id="stripeToggle" checked onchange="toggleStripe()">
+          <input type="checkbox" id="lockdownToggle" onchange="toggleLockdown()">
           <span class="slider"></span>
         </label>
         <div>
@@ -72,13 +72,16 @@
         </div>
       </div>
       <div style="flex:1;"></div>
-      <button class="btn btn-danger" onclick="alert('Module loading...')">EMERGENCY PURGE</button>
+      <button class="btn btn-ghost" style="color:var(--accent-danger); border: 1px solid var(--accent-danger);" onclick="emergencyPurge()">EMERGENCY PURGE</button>
     </div>
 
     <div class="glass-panel" style="margin-top: 32px;">
       <div class="card-header">
         <h3 class="card-title">User Database</h3>
-        <button class="btn btn-ghost btn-sm" onclick="fetchAdminData()">↻ Refresh DB</button>
+        <div style="display:flex; gap: 8px;">
+          <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()">+ Create User</button>
+          <button class="btn btn-ghost btn-sm" onclick="fetchAdminData()">↻ Refresh DB</button>
+        </div>
       </div>
       <div class="card-body" style="overflow-x: auto; padding:0;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -178,6 +181,7 @@
               </td>
               <td style="padding:16px;">
                 <div style="display:flex; gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="openEditUserModal('${u.id}', '${u.email}', '${u.displayName}', '${u.plan}', ${u.isAdmin})" title="Edit User">✏️ Edit</button>
                   <button class="btn btn-ghost btn-sm" onclick="resetPassword('${u.id}')" title="Reset Password">🔑 Reset</button>
                   <button class="btn btn-ghost btn-sm" onclick="toggleAdmin('${u.id}', ${!u.isAdmin})" title="Toggle Admin">⭐ ${u.isAdmin ? 'Demote' : 'Promote'}</button>
                   <button class="btn btn-ghost btn-sm" style="color:var(--accent-danger); border-color:var(--accent-danger);" onclick="deleteUser('${u.id}')" title="Delete User">🗑️ Delete</button>
@@ -252,11 +256,176 @@
       }
     }
 
-    // Attach to UI Button
-    document.querySelector('.btn-danger').onclick = emergencyPurge;
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/admin/settings', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('lockdownToggle').checked = data.settings.systemLockdown;
+        }
+      } catch (e) {}
+    }
 
-    // Load Data on Mount
-    window.onload = fetchAdminData;
+    async function toggleLockdown() {
+      const isLocked = document.getElementById('lockdownToggle').checked;
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ systemLockdown: isLocked }),
+          credentials: 'include'
+        });
+        if (res.ok) {
+          showToast(`System Lockdown is now ${isLocked ? 'ON' : 'OFF'}`);
+        } else {
+          showToast('Failed to update settings', 'error');
+        }
+      } catch (e) {
+        showToast('Error updating settings', 'error');
+      }
+    }
+
+    // Modal Logic
+    function closeModals(e) {
+      if (e && e.target && e.target.classList && !e.target.classList.contains('modal')) return;
+      document.getElementById('createUserModal').classList.remove('active');
+      document.getElementById('editUserModal').classList.remove('active');
+    }
+
+    function openCreateUserModal() {
+      document.getElementById('createUserForm').reset();
+      document.getElementById('createUserModal').classList.add('active');
+    }
+
+    async function submitCreateUser(e) {
+      e.preventDefault();
+      const payload = {
+        email: document.getElementById('newEmail').value,
+        displayName: document.getElementById('newName').value,
+        password: document.getElementById('newPassword').value,
+        plan: document.getElementById('newPlan').value,
+        isAdmin: document.getElementById('newIsAdmin').checked
+      };
+      
+      const res = await fetch('/api/admin/users', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload), credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('User created successfully');
+        closeModals();
+        fetchAdminData();
+      } else {
+        showToast(data.error || 'Failed to create user', 'error');
+      }
+    }
+
+    let editUserId = null;
+    function openEditUserModal(id, email, name, plan, isAdmin) {
+      editUserId = id;
+      document.getElementById('editEmail').value = email;
+      document.getElementById('editName').value = name === 'undefined' || name === 'null' ? '' : name;
+      document.getElementById('editPlan').value = plan;
+      document.getElementById('editIsAdmin').checked = isAdmin;
+      document.getElementById('editUserModal').classList.add('active');
+    }
+
+    async function submitEditUser(e) {
+      e.preventDefault();
+      if (!editUserId) return;
+      
+      const payload = {
+        email: document.getElementById('editEmail').value,
+        displayName: document.getElementById('editName').value,
+        plan: document.getElementById('editPlan').value,
+        isAdmin: document.getElementById('editIsAdmin').checked
+      };
+      
+      const res = await fetch(`/api/admin/users/${editUserId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload), credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('User updated successfully');
+        closeModals();
+        fetchAdminData();
+      } else {
+        showToast(data.error || 'Failed to update user', 'error');
+      }
+    }
+
+    // Init
+    fetchAdminData();
+    fetchSettings();
   </script>
+
+  <!-- Create User Modal -->
+  <div class="modal" id="createUserModal" onclick="closeModals(event)">
+    <div class="modal-content glass-panel" style="max-width: 400px; width: 100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-size:1.5rem; font-weight:700;">Create User</h3>
+        <button class="btn btn-ghost" onclick="closeModals()" style="padding:4px 8px;">✕</button>
+      </div>
+      <form id="createUserForm" onsubmit="submitCreateUser(event)" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" class="input-field" id="newEmail" required placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label>Display Name (Optional)</label>
+          <input type="text" class="input-field" id="newName" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Temporary Password</label>
+          <input type="text" class="input-field" id="newPassword" required placeholder="StrongPass123!">
+        </div>
+        <div class="form-group">
+          <label>Plan</label>
+          <select class="input-field" id="newPlan">
+            <option value="PRO">PRO</option>
+            <option value="ENTERPRISE">ENTERPRISE</option>
+          </select>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="newIsAdmin"> Give Super Admin Access
+        </label>
+        <button type="submit" class="btn btn-primary" style="margin-top:10px;">Create User</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div class="modal" id="editUserModal" onclick="closeModals(event)">
+    <div class="modal-content glass-panel" style="max-width: 400px; width: 100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-size:1.5rem; font-weight:700;">Edit User</h3>
+        <button class="btn btn-ghost" onclick="closeModals()" style="padding:4px 8px;">✕</button>
+      </div>
+      <form id="editUserForm" onsubmit="submitEditUser(event)" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" class="input-field" id="editEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" class="input-field" id="editName">
+        </div>
+        <div class="form-group">
+          <label>Plan</label>
+          <select class="input-field" id="editPlan">
+            <option value="PRO">PRO</option>
+            <option value="ENTERPRISE">ENTERPRISE</option>
+          </select>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="editIsAdmin"> Super Admin Access
+        </label>
+        <button type="submit" class="btn btn-primary" style="margin-top:10px;">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>

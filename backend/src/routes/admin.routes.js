@@ -12,6 +12,55 @@ const router = Router();
 router.use(authenticate);
 router.use(adminAuthenticate);
 
+/** GET /api/admin/settings - Get Platform Settings */
+router.get('/settings', async (req, res) => {
+  try {
+    const { getPlatformSettings } = await import('../utils/platformSettings.js');
+    res.json({ success: true, settings: getPlatformSettings() });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+/** PATCH /api/admin/settings - Update Platform Settings */
+router.patch('/settings', async (req, res) => {
+  try {
+    const { systemLockdown } = req.body;
+    const { updatePlatformSettings } = await import('../utils/platformSettings.js');
+    const updated = updatePlatformSettings({ systemLockdown });
+    res.json({ success: true, settings: updated });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+/** POST /api/admin/users - Manually create user */
+router.post('/users', async (req, res) => {
+  try {
+    const { email, displayName, password, plan, isAdmin } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+    
+    const existing = await users.findByEmail(email);
+    if (existing) return res.status(400).json({ error: 'Email already exists' });
+    
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        displayName: displayName || email.split('@')[0],
+        passwordHash,
+        plan: plan || 'PRO',
+        isAdmin: isAdmin || false
+      }
+    });
+    
+    res.json({ success: true, user });
+  } catch (error) {
+    logger.error('Admin user creation failed', { error: error.message });
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
 /** GET /api/admin/users - List all users with stats */
 router.get('/users', async (req, res) => {
   try {
@@ -33,12 +82,20 @@ router.get('/users', async (req, res) => {
 /** PATCH /api/admin/users/:id - Update user account/subscription */
 router.patch('/users/:id', async (req, res) => {
   try {
-    const { plan, subscriptionStatus, isAdmin } = req.body;
-    const updatedUser = await users.update(req.params.id, {
-      plan,
-      subscriptionStatus,
-      isAdmin
+    const { email, displayName, plan, subscriptionStatus, isAdmin } = req.body;
+    
+    // Use prisma directly to allow updating email/displayName which might not be in users.update wrapper
+    const updatedUser = await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        ...(email && { email }),
+        ...(displayName && { displayName }),
+        ...(plan && { plan }),
+        ...(subscriptionStatus && { subscriptionStatus }),
+        ...(isAdmin !== undefined && { isAdmin })
+      }
     });
+    
     res.json({ success: true, user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: 'Update failed' });
