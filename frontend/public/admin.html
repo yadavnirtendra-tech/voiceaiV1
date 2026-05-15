@@ -199,7 +199,7 @@
     }
 
     async function resetPassword(userId) {
-      if (!confirm('Are you sure you want to force reset this user\\'s password?')) return;
+      if (!confirm("Are you sure you want to force reset this user's password?")) return;
       const res = await fetch(`/api/admin/users/${userId}/reset-password`, { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (data.success) {
