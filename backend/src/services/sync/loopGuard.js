@@ -31,17 +31,22 @@ export function shouldProcessEvent(event, providerType, identityId) {
     return { shouldProcess: false, reason: 'SYSTEM_GENERATED_TAG' };
   }
 
-  const cacheKey = `${identityId}:${event.id || event.iCalUId}`;
+  const etag = event.etag || event.changeKey || '';
+  const cacheKey = `${identityId}:${event.id || event.iCalUId}:${etag}`;
   if (recentlyProcessed.has(cacheKey)) {
     return { shouldProcess: false, reason: 'RECENTLY_PROCESSED' };
   }
+
+  // 🛡️ Alien Tech: Mutex Lock for Race Conditions
+  // Instantly mark as processed in memory so concurrent identical webhooks are blocked
+  recentlyProcessed.set(cacheKey, Date.now());
 
   const title = event.summary || event.subject || '';
   if (title.includes('CalendarSync') && title.includes('Reserved')) {
     return { shouldProcess: false, reason: 'SHADOW_BLOCK_TITLE_MATCH' };
   }
 
-  return { shouldProcess: true, reason: 'USER_EVENT' };
+  return { shouldProcess: true, reason: 'USER_EVENT', cacheKey };
 }
 
 export function markAsProcessed(eventId, identityId) {

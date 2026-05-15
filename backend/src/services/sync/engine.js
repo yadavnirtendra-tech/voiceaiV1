@@ -86,9 +86,6 @@ async function processEvent(externalEvent, identity) {
   // Database-level dedup check
   if (await isAlreadyProcessed(eventId, identity.id)) return;
 
-  // Mark as processed immediately
-  markAsProcessed(eventId, identity.id);
-
   // Parse event data
   const isCancelled = isGoogle ? externalEvent.status === 'cancelled' : externalEvent['@removed'];
   let startTime = isGoogle ? (externalEvent.start?.dateTime || externalEvent.start?.date) : externalEvent.start?.dateTime;
