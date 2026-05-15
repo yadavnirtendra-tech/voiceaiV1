@@ -64,6 +64,15 @@ router.post('/events', authenticate, apiLimiter, async (req, res) => {
       return res.status(404).json({ error: 'Identity not found' });
     }
 
+    // 🛸 Alien Tech: Pre-Flight Conflict Check
+    // Prevents booking if the slot is already reserved across ANY connected calendar
+    const isAvailable = await isSlotAvailable(req.user.id, startTime, endTime);
+    if (!isAvailable) {
+      return res.status(409).json({ 
+        error: 'Conflict Detected: This time slot is already reserved on one of your connected calendars.' 
+      });
+    }
+
     let result;
     if (identity.providerType === 'GOOGLE') {
       result = await googleService.createEvent(identity, { summary, description, startTime, endTime, attendees });

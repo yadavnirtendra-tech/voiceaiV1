@@ -396,13 +396,19 @@ async function handleCreateEvent(e) {
     startTime: document.getElementById('eventStart').value,
     endTime: document.getElementById('eventEnd').value
   };
-  await fetch('/api/calendar/events', {
+  const res = await fetch('/api/calendar/events', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload), credentials: 'include'
   });
-  closeEventModal('esc');
-  showToast('Event Created & Syncing...');
-  fetchDashboardData();
+  
+  if (res.ok) {
+    closeEventModal('esc');
+    showToast('Event Created & Syncing...');
+    fetchDashboardData();
+  } else {
+    const data = await res.json();
+    showToast(data.error || 'Failed to create event', 'error');
+  }
 }
 window.handleCreateEvent = handleCreateEvent;
 
