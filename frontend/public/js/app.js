@@ -333,19 +333,29 @@ function editAgent(id) {
 
 document.getElementById('agent-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('Agent form submitted');
+    
     const editId = e.target.getAttribute('data-edit-id');
     
-    const data = {
-        name: document.getElementById('agent-name').value,
-        voice: document.getElementById('agent-voice').value,
-        systemPrompt: document.getElementById('agent-prompt').value,
-        greeting: document.getElementById('agent-greeting').value,
-        transferNumber: document.getElementById('agent-transfer').value,
-        webhookUrl: document.getElementById('agent-webhook').value,
-        webhookEvents: document.getElementById('agent-webhook-events').value,
-        llmModel: document.getElementById('agent-llm').value,
-        maxTokens: parseInt(document.getElementById('agent-tokens').value),
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        if (!el) console.warn(`Element #${id} not found`);
+        return el ? el.value : '';
     };
+
+    const data = {
+        name: getVal('agent-name'),
+        voice: getVal('agent-voice'),
+        systemPrompt: getVal('agent-prompt'),
+        greeting: getVal('agent-greeting'),
+        transferNumber: getVal('agent-transfer'),
+        webhookUrl: getVal('agent-webhook'),
+        webhookEvents: getVal('agent-webhook-events'),
+        llmModel: getVal('agent-llm'),
+        maxTokens: parseInt(getVal('agent-tokens')) || 150,
+    };
+
+    console.log('Sending agent data:', data);
 
     try {
         const method = editId ? 'PUT' : 'POST';
@@ -358,11 +368,17 @@ document.getElementById('agent-form')?.addEventListener('submit', async (e) => {
         });
 
         if (res.ok) {
+            console.log('Agent saved successfully');
             closeAgentModal();
             loadAgents();
+        } else {
+            const errData = await res.json();
+            console.error('Server error saving agent:', errData);
+            alert(`Error: ${errData.error || 'Failed to save agent'}`);
         }
     } catch (err) {
-        console.error('Failed to save agent', err);
+        console.error('Network error saving agent:', err);
+        alert('Connection error. Is the backend server running?');
     }
 });
 
