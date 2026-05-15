@@ -162,10 +162,13 @@ async function loadPhoneNumbers() {
 async function loadVoices() {
     try {
         const res = await fetch(`${API_URL}/voices`);
+        if (!res.ok) throw new Error('Failed to fetch voices');
         const data = await res.json();
         const select = document.getElementById('agent-voice');
-        if (select && data.voices) {
+        if (select && data.voices && data.voices.length > 0) {
             select.innerHTML = data.voices.map(v => `<option value="${v.id}">${v.name} (${v.language})</option>`).join('');
+        } else {
+            console.warn('No voices returned from server, using defaults');
         }
     } catch (err) {
         console.error('Failed to load voices', err);
@@ -302,10 +305,20 @@ function renderPhoneNumbers(numbers) {
 // ============================================
 
 function openAgentModal() {
-    document.getElementById('modal-title').textContent = 'Create New Agent';
-    document.getElementById('agent-form').reset();
-    document.getElementById('agent-form').removeAttribute('data-edit-id');
-    document.getElementById('agent-modal').style.display = 'flex';
+    console.log('Opening Agent Modal');
+    const modal = document.getElementById('agent-modal');
+    const form = document.getElementById('agent-form');
+    const title = document.getElementById('modal-title');
+    
+    if (modal && form && title) {
+        title.textContent = 'Create New Agent';
+        form.reset();
+        form.removeAttribute('data-edit-id');
+        modal.style.display = 'flex';
+    } else {
+        console.error('Modal or Form elements not found in DOM');
+        alert('Internal UI Error: Modal elements missing. Please refresh the page.');
+    }
 }
 
 function closeAgentModal() {
