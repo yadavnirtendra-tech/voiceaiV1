@@ -5,7 +5,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestUser, createTestIdentity, createTestEvent } from '../helpers/testUtils.js';
-import { users, identities, calendarEvents } from '../../src/db/firestore.js';
+import { users, identities, calendarEvents } from '../../src/db/index.js';
 import { getAvailability, isSlotAvailable } from '../../src/services/availability/globalProfile.js';
 
 describe('Availability Service', () => {

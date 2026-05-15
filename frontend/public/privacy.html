@@ -1,54 +1,83 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - OpenCalendar</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-        .legal-content { max-width: 800px; margin: 60px auto; padding: 40px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); }
-        h1 { margin-bottom: 24px; color: var(--accent-indigo); }
-        h2 { margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem; color: var(--text-primary); }
-        p, li { color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: var(--accent-indigo); text-decoration: none; font-weight: 600; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | OpenCalendar</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .legal-content { max-width: 800px; margin: 80px auto; padding: 60px; }
+    h1 { margin-bottom: 24px; font-size: 2.5rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    h2 { margin-top: 40px; margin-bottom: 16px; font-size: 1.5rem; color: var(--text-primary); font-weight: 700; }
+    p, li { color: var(--text-secondary); margin-bottom: 16px; line-height: 1.8; font-size: 1.05rem; }
+    ul { margin-left: 24px; margin-bottom: 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 32px; color: var(--text-secondary); text-decoration: none; font-weight: 600; transition: var(--transition); }
+    .back-link:hover { color: var(--text-primary); transform: translateX(-4px); }
+  </style>
 </head>
 <body>
-    <div class="legal-content">
-        <a href="/" class="back-link">← Back to Home</a>
-        <h1>Privacy Policy</h1>
-        <p>Last Updated: May 13, 2026</p>
-        
-        <p>At OpenCalendar, we take your privacy and the security of your calendar data extremely seriously. This policy explains how we collect, use, and protect your information.</p>
 
-        <h2>1. Information We Collect</h2>
-        <p>To provide our synchronization services, we collect:</p>
-        <ul>
-            <li><strong>Account Information:</strong> Your name and email address when you register.</li>
-            <li><strong>Calendar Data:</strong> We access your calendar events (titles, times, locations) via Google and Microsoft APIs solely to synchronize them across your accounts.</li>
-            <li><strong>OAuth Tokens:</strong> We store encrypted access and refresh tokens to maintain your connection to calendar providers.</li>
-        </ul>
+  <!-- Dynamic Parallax Background -->
+  <div class="parallax-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
 
-        <h2>2. How We Use Your Data</h2>
-        <p>We use your data exclusively to:</p>
-        <ul>
-            <li>Synchronize events between your connected calendars.</li>
-            <li>Create "Shadow Blocks" to protect your availability.</li>
-            <li>Provide you with a dashboard of your upcoming meetings.</li>
-        </ul>
-        <p><strong>We NEVER sell your data to third parties.</strong> We do not use your calendar content for advertising or any purpose other than synchronization.</p>
-
-        <h2>3. Data Protection</h2>
-        <p>All sensitive data, including OAuth tokens, is stored using <strong>AES-256-GCM encryption</strong>. Our connections to Google and Microsoft APIs are secured via industry-standard TLS encryption.</p>
-
-        <h2>4. Data Retention and Deletion</h2>
-        <p>We only store calendar event data as long as necessary to facilitate synchronization. If you disconnect an account or delete your OpenCalendar account, we immediately delete all associated tokens and cached event data from our servers.</p>
-
-        <h2>5. Google API Limited Use</h2>
-        <p>OpenCalendar's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" style="color: var(--accent-indigo);">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
-
-        <h2>6. Contact Us</h2>
-        <p>If you have any questions about this Privacy Policy, please contact us at support@opencalender.site.</p>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="img/logo.png" alt="Logo" style="width:28px; height:28px; border-radius:8px;">
+      OpenCalendar
+    </a>
+    <div class="navbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
     </div>
+  </nav>
+
+  <main class="legal-content glass-panel">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1>Privacy Policy</h1>
+    <p style="font-weight:600; color:var(--text-muted);">Last Updated: May 15, 2026</p>
+    
+    <p>At OpenCalendar, we take your privacy and the security of your calendar data extremely seriously. This policy explains how we collect, use, and protect your information using state-of-the-art security measures.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>To provide our synchronization engine, we collect minimal data:</p>
+    <ul>
+      <li><strong>Account Details:</strong> Basic identifier information such as name and email.</li>
+      <li><strong>Calendar Telemetry:</strong> Event timing and metadata required for synchronization.</li>
+      <li><strong>OAuth Credentials:</strong> Encrypted access tokens stored securely.</li>
+    </ul>
+
+    <h2>2. Data Utilization</h2>
+    <p>Your data remains yours. We use it solely to:</p>
+    <ul>
+      <li>Establish bidirectional synchronization.</li>
+      <li>Calculate shadow block requirements to prevent double-booking.</li>
+      <li>Power your unified dashboard experience.</li>
+    </ul>
+
+    <h2>3. Enterprise-Grade Security</h2>
+    <p>All stored credentials utilize AES-256-GCM encryption. API transactions occur exclusively over TLS 1.3 encrypted tunnels.</p>
+
+    <h2>4. Google API Limited Use</h2>
+    <p>OpenCalendar's use and transfer to any other app of information received from Google APIs will adhere to the <a href="#" style="color:var(--accent-primary);">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+    <div style="margin-top:60px; padding-top:40px; border-top:1px solid var(--border-color); text-align:center;">
+      <p>Questions? Contact our security team at <a href="mailto:support@opencalender.site" style="color:var(--accent-primary);">support@opencalender.site</a></p>
+    </div>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.getElementById('themeToggleBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeToggleBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  </script>
 </body>
 </html>

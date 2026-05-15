@@ -5,7 +5,7 @@
 import { describe, it, before, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestUser, createTestIdentity, createTestEvent } from '../helpers/testUtils.js';
-import { users, identities, calendarEvents, shadowBlocks } from '../../src/db/firestore.js';
+import { users, identities, calendarEvents, shadowBlocks } from '../../src/db/index.js';
 import { checkConflicts, resolveConflict } from '../../src/services/sync/conflictResolver.js';
 
 describe('Conflict Resolver', () => {

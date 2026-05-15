@@ -1,47 +1,71 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service - OpenCalendar</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-        .legal-content { max-width: 800px; margin: 60px auto; padding: 40px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); }
-        h1 { margin-bottom: 24px; color: var(--accent-indigo); }
-        h2 { margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem; color: var(--text-primary); }
-        p, li { color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: var(--accent-indigo); text-decoration: none; font-weight: 600; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service | OpenCalendar</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .legal-content { max-width: 800px; margin: 80px auto; padding: 60px; }
+    h1 { margin-bottom: 24px; font-size: 2.5rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    h2 { margin-top: 40px; margin-bottom: 16px; font-size: 1.5rem; color: var(--text-primary); font-weight: 700; }
+    p, li { color: var(--text-secondary); margin-bottom: 16px; line-height: 1.8; font-size: 1.05rem; }
+    ul { margin-left: 24px; margin-bottom: 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 32px; color: var(--text-secondary); text-decoration: none; font-weight: 600; transition: var(--transition); }
+    .back-link:hover { color: var(--text-primary); transform: translateX(-4px); }
+  </style>
 </head>
 <body>
-    <div class="legal-content">
-        <a href="/" class="back-link">← Back to Home</a>
-        <h1>Terms of Service</h1>
-        <p>Last Updated: May 13, 2026</p>
 
-        <h2>1. Acceptance of Terms</h2>
-        <p>By accessing or using OpenCalendar (opencalender.site), you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+  <!-- Dynamic Parallax Background -->
+  <div class="parallax-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-3"></div>
+  </div>
 
-        <h2>2. Description of Service</h2>
-        <p>OpenCalendar provides a synchronization engine for Google and Microsoft calendars. We provide tools to automate availability management and event mirroring.</p>
-
-        <h2>3. User Responsibilities</h2>
-        <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must not use the service for any illegal or unauthorized purpose.</p>
-
-        <h2>4. API Usage</h2>
-        <p>Our service integrates with third-party providers (Google and Microsoft). Your use of those services through OpenCalendar is also subject to their respective terms and conditions.</p>
-
-        <h2>5. Limitation of Liability</h2>
-        <p>OpenCalendar is provided "as is". We are not liable for any data loss, service interruptions, or scheduling conflicts that may arise from the use of our synchronization engine.</p>
-
-        <h2>6. Termination</h2>
-        <p>We reserve the right to terminate or suspend access to our service immediately, without prior notice or liability, for any reason whatsoever, including breach of these Terms.</p>
-
-        <h2>7. Changes to Terms</h2>
-        <p>We reserve the right to modify these terms at any time. We will notify users of any significant changes via the email address associated with their account.</p>
-
-        <h2>8. Contact Information</h2>
-        <p>For any questions regarding these Terms, please contact support@opencalender.site.</p>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="img/logo.png" alt="Logo" style="width:28px; height:28px; border-radius:8px;">
+      OpenCalendar
+    </a>
+    <div class="navbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
     </div>
+  </nav>
+
+  <main class="legal-content glass-panel">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1>Terms of Service</h1>
+    <p style="font-weight:600; color:var(--text-muted);">Last Updated: May 15, 2026</p>
+    
+    <h2>1. Platform Access</h2>
+    <p>By utilizing the OpenCalendar synchronization engine, you agree to be bound by these operational guidelines. The platform is designed for professional schedule orchestration.</p>
+
+    <h2>2. API Limitations</h2>
+    <p>OpenCalendar acts as a conduit between Microsoft Graph and Google Workspace APIs. Your usage is subject to the respective rate limits and terms of those downstream providers.</p>
+
+    <h2>3. Operational Guarantees</h2>
+    <p>While we employ a robust state machine to prevent infinite loops, OpenCalendar is provided "as is". We are not liable for incidental scheduling anomalies arising from third-party API outages.</p>
+
+    <h2>4. Account Autonomy</h2>
+    <p>You maintain full control over connected identities. Disconnecting an account via the dashboard immediately revokes our API access and purges related OAuth tokens from our secure vault.</p>
+
+    <div style="margin-top:60px; padding-top:40px; border-top:1px solid var(--border-color); text-align:center;">
+      <p>Questions? Contact our legal team at <a href="mailto:support@opencalender.site" style="color:var(--accent-primary);">support@opencalender.site</a></p>
+    </div>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.getElementById('themeToggleBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeToggleBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  </script>
 </body>
 </html>

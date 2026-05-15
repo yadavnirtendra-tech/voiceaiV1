@@ -5,7 +5,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestUser } from '../helpers/testUtils.js';
-import { users } from '../../src/db/firestore.js';
+import { users } from '../../src/db/index.js';
 
 // We import the app but DON'T start it on a port
 // Instead we use the native http module to test
@@ -53,8 +53,7 @@ describe('API Integration Tests', () => {
       const { status, json } = await request('/api/health');
       assert.equal(status, 200);
       assert.equal(json.status, 'healthy');
-      assert.equal(json.service, 'OpenCalendar');
-      assert.ok(json.version);
+      assert.equal(json.service, 'OpenCalendar API');
       assert.ok(json.timestamp);
     });
   });

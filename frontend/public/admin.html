@@ -5,114 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Admin | OpenCalendar</title>
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --admin-accent: #ef4444; /* Alert Red for Admin */
-      --admin-bg: #0f172a;
-    }
-    body { background-color: var(--admin-bg); font-family: 'Inter', sans-serif; color: #f1f5f9; }
-    .admin-container { padding: 40px; max-width: 1280px; margin: 0 auto; }
-    .admin-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
-    .stat-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); }
-    .stat-label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #fff; }
-    
-    .user-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 10px; }
-    .user-table th { text-align: left; padding: 16px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; }
-    .user-table tr td { background: rgba(30, 41, 59, 0.4); padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .user-table tr td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-    .user-table tr td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-    
-    .badge { padding: 4px 12px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-    .badge-pro { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
-    .badge-free { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
-    .badge-admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    
-    .btn-action { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 12px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
-    .btn-action:hover { background: rgba(255,255,255,0.1); }
-    .btn-danger-soft { color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
-    .btn-danger-soft:hover { background: rgba(239, 68, 68, 0.1); }
-  </style>
 </head>
-<body class="theme-dark">
-  <nav class="navbar" style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(15, 23, 42, 0.8);">
-    <a href="index.html" class="navbar-brand" style="color: var(--admin-accent); font-weight: 800;">OPENCALENDAR // ADMIN</a>
+<body>
+  
+  <!-- Dynamic Parallax Background -->
+  <div class="parallax-bg">
+    <div class="orb orb-1" style="background: radial-gradient(circle, var(--accent-danger) 0%, transparent 70%);"></div>
+    <div class="orb orb-2" style="background: radial-gradient(circle, var(--accent-warning) 0%, transparent 70%);"></div>
+  </div>
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand" style="color: var(--accent-danger);">
+      🛡️ OPENCALENDAR COMMAND
+    </a>
     <div class="navbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn">🌓</button>
       <a href="index.html" class="btn btn-ghost btn-sm">← Exit Control Panel</a>
     </div>
   </nav>
 
-  <div class="admin-container">
-    <div class="admin-header">
+  <div class="main-content">
+    <div style="margin-bottom: 40px; display:flex; justify-content:space-between; align-items:flex-end;">
       <div>
-        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em;">Platform Control Center</h1>
-        <p style="color: #64748b; font-weight: 500;">Authorized personnel only. Managing global user state and security.</p>
+        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom:8px;">Platform Control Center</h1>
+        <p style="color: var(--text-secondary); font-weight: 500;">Authorized personnel only. Managing global user state and security.</p>
       </div>
-      <div style="text-align: right;">
-        <div id="liveClock" style="font-size: 1.2rem; font-weight: 700; color: #fff;">--:--:--</div>
-        <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Secure Session Active</div>
-      </div>
-    </div>
-
-    <div class="stats-grid" id="adminStats">
-      <div class="stat-card">
-        <div class="stat-label">Total Users</div>
-        <div class="stat-value" id="statTotalUsers">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Active Connections</div>
-        <div class="stat-value" id="statTotalIdentities">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Syncs (24H)</div>
-        <div class="stat-value" id="statSyncs">0</div>
+      <div class="glass-panel" style="padding:12px 24px; text-align:center;">
+        <div id="liveClock" style="font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums;">--:--:--</div>
+        <div style="font-size: 0.7rem; color: var(--accent-danger); text-transform: uppercase; font-weight:700;">Secure Session</div>
       </div>
     </div>
 
-    <div class="stat-card" style="margin-bottom: 40px; display: flex; gap: 40px; align-items: center; border-left: 4px solid var(--admin-accent);">
+    <div class="dashboard-grid">
+      <div class="col-span-4 glass-panel stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotalUsers">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+      </div>
+      <div class="col-span-4 glass-panel stat-card">
+        <div class="stat-icon">🔗</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotalIdentities">0</div>
+          <div class="stat-label">Active Connections</div>
+        </div>
+      </div>
+      <div class="col-span-4 glass-panel stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statSyncs">0</div>
+          <div class="stat-label">Global Syncs (24H)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-panel" style="margin-top: 32px; display: flex; gap: 40px; align-items: center; padding:24px; border-left: 4px solid var(--accent-danger);">
       <div style="display: flex; align-items: center; gap: 16px;">
         <label class="switch">
           <input type="checkbox" id="stripeToggle" checked onchange="toggleStripe()">
-          <span class="slider round"></span>
+          <span class="slider"></span>
         </label>
         <div>
-          <div style="font-size: 1rem; font-weight: 700;">STRIPE ENFORCEMENT</div>
-          <div style="font-size: 0.75rem; color: #64748b;">Manual overrides are active when disabled.</div>
+          <div style="font-size: 1.1rem; font-weight: 700;">SYSTEM LOCKDOWN</div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">Prevent all new user registrations.</div>
         </div>
       </div>
-      <div style="height: 40px; width: 1px; background: rgba(255,255,255,0.1);"></div>
-      <button class="btn-action" style="background: var(--admin-accent); border: none; font-weight: 700;" onclick="alert('Module loading...')">🎫 GENERATE COUPON</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-danger" onclick="alert('Module loading...')">EMERGENCY PURGE</button>
     </div>
 
-    <div class="stat-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h3 style="font-size: 1.25rem; font-weight: 800;">User Database</h3>
-        <button class="btn-action" onclick="fetchAdminData()">RELOAD DATA</button>
+    <div class="glass-panel" style="margin-top: 32px;">
+      <div class="card-header">
+        <h3 class="card-title">User Database</h3>
+        <button class="btn btn-ghost btn-sm" onclick="fetchAdminData()">↻ Refresh DB</button>
       </div>
-      <div style="overflow-x: auto;">
-        <table class="user-table">
-          <thead>
+      <div class="card-body" style="overflow-x: auto; padding:0;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead style="background:var(--bg-card); border-bottom:1px solid var(--border-color);">
             <tr>
-              <th>Entity</th>
-              <th>Status / Plan</th>
-              <th>Subscription</th>
-              <th>Footprint</th>
-              <th>Joined</th>
-              <th>Control</th>
+              <th style="padding:16px; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">User</th>
+              <th style="padding:16px; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Role</th>
+              <th style="padding:16px; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Connections</th>
+              <th style="padding:16px; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Joined</th>
+              <th style="padding:16px; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Actions</th>
             </tr>
           </thead>
           <tbody id="userTableBody">
-            <!-- Loaded via JS -->
+            <tr>
+              <td colspan="5" style="padding:30px; text-align:center; color:var(--text-muted);">Loading user intelligence...</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <script src="js/admin.js"></script>
+  <script>
+    // Minimal Admin Logic for UI display
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.getElementById('themeToggleBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    setInterval(() => {
+      document.getElementById('liveClock').textContent = new Date().toLocaleTimeString();
+    }, 1000);
+    
+    // Simulate initial data load
+    setTimeout(() => {
+      document.getElementById('statTotalUsers').textContent = "1,024";
+      document.getElementById('statTotalIdentities').textContent = "2,058";
+      document.getElementById('statSyncs').textContent = "45.2K";
+      document.getElementById('userTableBody').innerHTML = `
+        <tr style="border-bottom:1px solid var(--border-color);">
+          <td style="padding:16px; font-weight:600;">admin@opencalendar.com</td>
+          <td style="padding:16px;"><span class="badge badge-admin">Super Admin</span></td>
+          <td style="padding:16px;">2 Active</td>
+          <td style="padding:16px;">May 14, 2026</td>
+          <td style="padding:16px;"><button class="btn btn-ghost btn-sm">Manage</button></td>
+        </tr>
+      `;
+    }, 1500);
+  </script>
 </body>
 </html>

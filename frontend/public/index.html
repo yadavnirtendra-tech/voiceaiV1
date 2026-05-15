@@ -1,510 +1,319 @@
-<!-- Verified Deployment: 2026-05-14T21:10:00Z -->
+<!-- Verified Deployment: 2026-05-15 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="OpenCalendar — The Professional Unified Calendar Sync Engine. Connect Google and Microsoft calendars for a single source of truth.">
-  <title>OpenCalendar — Unified Calendar Sync Engine</title>
+  <meta name="description" content="OpenCalendar — The Professional Unified Calendar Sync Engine.">
+  <title>OpenCalendar — Unified Sync Intelligence</title>
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="icon" href="img/logo.png">
 </head>
 <body>
+  
+  <!-- Dynamic Parallax Background -->
+  <div class="parallax-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
-    <img src="img/logo.png" alt="OpenCalendar" style="width:64px; height:64px; border-radius:12px; margin-bottom: 20px;">
-    <div class="spinner"></div>
-    <p style="color:var(--text-secondary); font-size:0.85rem;">Initializing OpenCalendar...</p>
+  <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; transition: opacity 0.3s ease;">
+    <img src="img/logo.png" alt="OpenCalendar" style="width:64px; height:64px; border-radius:16px; margin-bottom: 20px;">
+    <div style="color:var(--text-secondary); font-size:1rem; font-weight:500;">Initializing OpenCalendar...</div>
   </div>
 
   <!-- ========== LANDING PAGE ========== -->
-  <div id="landingPage" style="display:block;">
-    <header style="padding: 100px 20px; text-align: center; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.12) 0%, transparent 70%);">
-      <h1 style="font-size: 3.2rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.03em; background: linear-gradient(135deg, #FAFAFA, #6366F1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Unified Calendar Synchronization</h1>
-      <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 640px; margin: 0 auto 40px; line-height: 1.7;">
-        OpenCalendar is a professional synchronization engine that creates a "Single Source of Truth" across your Google and Microsoft calendars. Protect your availability automatically.
-      </p>
-      <div style="display: flex; justify-content: center; gap: 16px;">
-        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Get Started Forever Free</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" style="padding: 12px 28px; font-size: 0.9rem;">Learn More</button>
+  <div id="landingPage" style="display:none;">
+    
+    <nav class="navbar" style="background:transparent; border:none; padding:24px 40px;">
+      <div class="navbar-brand">
+        <img src="img/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:8px;">
+        OpenCalendar
+      </div>
+      <div class="navbar-actions">
+        <button class="btn btn-ghost" onclick="toggleTheme()" id="landingThemeBtn">🌓</button>
+        <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})">Sign In</button>
+      </div>
+    </nav>
+
+    <header class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title" id="heroTitle">Unified Calendar Intelligence</h1>
+        <p class="hero-subtitle" id="heroSubtitle">Connect your Google and Microsoft calendars into a single, seamless source of truth. Experience real-time synchronization with absolute security.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('authSectionAnchor').scrollIntoView({behavior:'smooth'})">Get Started Free</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Discover Features</button>
+        </div>
       </div>
     </header>
 
-    <section id="features" style="padding: 80px 20px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-      <div class="card" style="padding: 28px; text-align: center;">
-        <div style="font-size: 2.2rem; margin-bottom: 16px;">🔄</div>
-        <h3 style="margin-bottom: 8px;">Real-Time Sync</h3>
-        <p style="color: var(--text-secondary); font-size: 0.88rem;">Bidirectional synchronization between Google Workspace and Microsoft 365 in under 10 seconds.</p>
+    <section id="features" class="features-grid">
+      <div class="feature-card glass-panel">
+        <div class="feature-icon">⚡</div>
+        <h3>Real-Time Sync</h3>
+        <p>Bidirectional sub-second synchronization between Google Workspace and Microsoft 365.</p>
       </div>
-      <div class="card" style="padding: 28px; text-align: center;">
-        <div style="font-size: 2.2rem; margin-bottom: 16px;">🛡️</div>
-        <h3 style="margin-bottom: 8px;">Shadow Blocking</h3>
-        <p style="color: var(--text-secondary); font-size: 0.88rem;">Automatically reserve time on all accounts when you are booked on one. Prevent double-bookings forever.</p>
+      <div class="feature-card glass-panel">
+        <div class="feature-icon">🛡️</div>
+        <h3>Shadow Blocking</h3>
+        <p>Automatically reserve time slots across all connected accounts. Never get double-booked again.</p>
       </div>
-      <div class="card" style="padding: 28px; text-align: center;">
-        <div style="font-size: 2.2rem; margin-bottom: 16px;">🔐</div>
-        <h3 style="margin-bottom: 8px;">Enterprise Security</h3>
-        <p style="color: var(--text-secondary); font-size: 0.88rem;">Your data is AES-256 encrypted. We never store meeting content, only time slots and metadata.</p>
+      <div class="feature-card glass-panel">
+        <div class="feature-icon">🔐</div>
+        <h3>Bank-Grade Security</h3>
+        <p>AES-256 encrypted tokens. We sync your availability without permanently storing sensitive meeting contents.</p>
       </div>
     </section>
 
-    <div id="authSectionAnchor" style="padding: 80px 20px; text-align: center;">
-      <div id="authSection" style="display:none; text-align: left; background:var(--bg-card-solid); border-radius:var(--radius-xl); border: 1px solid var(--border-color); padding: 36px; max-width: 420px; width: 100%; box-shadow: var(--shadow-card); margin: 0 auto; backdrop-filter: blur(12px);">
-        <div style="text-align:center; margin-bottom: 24px;">
-          <img src="img/logo.png" alt="Logo" style="width:48px; height:48px; border-radius:12px; margin-bottom: 12px;">
-          <h2 style="font-size:1.4rem; font-weight:800; letter-spacing:-0.02em;">OpenCalendar Login</h2>
-          <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:4px;">Log in to access your unified calendar</p>
+    <div id="authSectionAnchor" class="auth-wrapper">
+      <div id="authSection" class="auth-card glass-panel">
+        <div style="text-align:center; margin-bottom: 32px;">
+          <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:8px;">Welcome Back</h2>
+          <p style="color:var(--text-secondary); font-size:0.9rem;">Sign in to your unified dashboard</p>
         </div>
+
         <div class="auth-tabs">
-          <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
-          <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</div>
-        </div>
-        <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label for="loginEmail">Email Address</label>
-            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
-          <div style="text-align: center; margin-top: 12px;">
-            <a href="#" onclick="openResetModal()" style="font-size: 0.75rem; color: var(--accent-indigo); text-decoration: none;">Forgot Password?</a>
-          </div>
-        </form>
-        <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
-          <div class="form-group">
-            <label for="regName">Display Name</label>
-            <input type="text" id="regName" class="form-control" placeholder="John Doe" required autocomplete="name">
-          </div>
-          <div class="form-group">
-            <label for="regEmail">Email Address</label>
-            <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label for="regPassword">Password</label>
-            <input type="password" id="regPassword" class="form-control" placeholder="Min 8 chars, 1 uppercase, 1 number" required minlength="8" pattern="(?=.*[A-Z])(?=.*[0-9]).{8,}" title="Must be at least 8 characters with 1 uppercase letter and 1 number" autocomplete="new-password">
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Create Account</button>
-        </form>
-
-        <div style="margin: 20px 0; display: flex; align-items: center; gap: 10px;">
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
-          <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Or Quick Connect</span>
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+          <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</div>
+          <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Create Account</div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <button class="btn btn-ghost" onclick="connectGoogle()" style="gap: 8px;">
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="name@company.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Access Dashboard</button>
+        </form>
+
+        <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="regEmail" class="form-control" placeholder="name@company.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="Min 8 characters" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Create Free Account</button>
+        </form>
+
+        <div style="margin: 32px 0; display:flex; align-items:center; gap:16px;">
+          <div style="flex:1; height:1px; background:var(--border-color);"></div>
+          <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">OR CONTINUE WITH</span>
+          <div style="flex:1; height:1px; background:var(--border-color);"></div>
+        </div>
+
+        <div class="quick-connect-grid">
+          <button class="provider-btn" type="button" onclick="connectGoogle()">
             <img src="https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png" width="18" alt="G"> Google
           </button>
-          <button class="btn btn-ghost" onclick="connectMicrosoft()" style="gap: 8px;">
+          <button class="provider-btn" type="button" onclick="connectMicrosoft()">
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="18" alt="M"> Outlook
           </button>
         </div>
       </div>
     </div>
-
-    <!-- Hero Value Prop (Replaces Pricing) -->
-    <section class="value-prop" style="padding: 60px 20px; text-align: center; background: rgba(99, 102, 241, 0.03); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
-      <h2 style="font-size: 2rem; margin-bottom: 16px; color: var(--text-primary);">OpenCalendar is 100% Free</h2>
-      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 30px;">
-        No subscriptions, no hidden costs, and no credit cards required. Our mission is to make calendar synchronization accessible to everyone.
-      </p>
-      <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 20px;">
-        <div style="text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-indigo);">∞</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Unlimited Syncs</div>
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);">∞</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Unlimited Accounts</div>
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);">∞</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Zero Cost</div>
-        </div>
-      </div>
-    </section>
   </div>
 
-  <!-- ========== DASHBOARD ========== -->
+  <!-- ========== MAIN DASHBOARD ========== -->
   <div class="app-container" id="app" style="display:none;">
-
+    
     <!-- Navbar -->
     <nav class="navbar" id="navbar">
-      <a href="/" class="navbar-brand" style="display: flex; align-items: center; gap: 10px;">
-        <img src="img/logo.png" alt="Logo" style="width:26px; height:26px; border-radius:6px;">
+      <a href="/" class="navbar-brand">
+        <img src="img/logo.png" alt="Logo" style="width:28px; height:28px; border-radius:8px;">
         OpenCalendar
       </a>
+      
       <div class="navbar-status">
         <div class="status-dot"></div>
         <span id="syncStatus">System Online</span>
-        <span style="margin: 0 6px; opacity: 0.2;">|</span>
-        <span id="liveClock" style="font-variant-numeric: tabular-nums; font-weight: 600; min-width: 70px; font-size: 0.75rem;">--:--:--</span>
       </div>
-      <div class="navbar-datetime" id="currentDateTime" style="font-size:0.78rem; color:var(--text-muted);"></div>
+
       <div class="navbar-actions">
-        <select id="timezoneSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.72rem;" onchange="updateTimezone(this.value)">
+        <select id="timezoneSelect" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" onchange="updateTimezone(this.value)">
           <option value="UTC">UTC</option>
-          <option value="America/New_York">New York (EST)</option>
-          <option value="Europe/London">London (GMT)</option>
-          <option value="Asia/Dubai">Dubai (GST)</option>
-          <option value="Asia/Kolkata">Mumbai (IST)</option>
-          <option value="Asia/Singapore">Singapore (SGT)</option>
-          <option value="Asia/Kuala_Lumpur">Malaysia (MYT)</option>
-          <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
-          <option value="Australia/Melbourne">Melbourne (AEST/AEDT)</option>
-          <option value="Australia/Brisbane">Brisbane (AEST)</option>
-          <option value="Australia/Adelaide">Adelaide (ACST/ACDT)</option>
-          <option value="Australia/Perth">Perth (AWST)</option>
-          <option value="Australia/Hobart">Hobart (AEST/AEDT)</option>
-          <option value="Australia/Darwin">Darwin (ACST)</option>
+          <option value="America/New_York">EST (New York)</option>
+          <option value="Europe/London">GMT (London)</option>
+          <option value="Asia/Kolkata">IST (Mumbai)</option>
+          <option value="Australia/Sydney">AEST (Sydney)</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme" id="themeToggleBtn">🌙 Dark</button>
-        <button class="btn btn-primary btn-sm" id="newEventBtn" style="display:none;" onclick="openEventModal()">+ New Event</button>
-        <a href="assistant.html" class="btn btn-ghost btn-sm" id="assistantLink" style="display:none;">🤖 AI Assistant</a>
-        <a href="admin.html" class="btn btn-ghost btn-sm" id="adminLink" style="display:none; border: 1px solid var(--accent-indigo); color: var(--accent-indigo);">🔑 Super Admin</a>
-        <div class="kbd-hint" title="Press Ctrl+K to search">⌘K</div>
-        <div class="navbar-user" id="userInfo" style="display:none;">
-          <div class="user-avatar" id="userAvatar">U</div>
-          <span id="userEmail"></span>
-        </div>
-        <button class="btn btn-ghost btn-sm" id="logoutBtn" style="display:none;" onclick="logout()">Logout</button>
+        
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Theme">🌓</button>
+        <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ New Event</button>
+        
+        <a href="assistant.html" class="btn btn-ghost btn-sm">🤖 AI</a>
+        <a href="admin.html" class="btn btn-ghost btn-sm" id="adminLink" style="display:none; color:var(--accent-danger); border-color:var(--accent-danger);">🔑 Admin</a>
+        
+        <div style="font-size:0.9rem; font-weight:600; color:var(--text-secondary); margin-left:10px;" id="userEmailDisplay"></div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
       </div>
     </nav>
-    <!-- Breaking News Ticker (Newspaper only) -->
-    <div class="breaking-ticker" id="breakingTicker">
-      <div class="ticker-content" id="tickerContent">
-        ★ EXTRA! EXTRA! The OpenCalendar Gazette — Your Unified Calendar Intelligence — Real-Time Synchronization Between Google & Microsoft — Shadow Blocks Prevent Double-Bookings — Conflicts Resolved Automatically — Read All About It! ★
-      </div>
-    </div>
 
     <main class="main-content">
-
-      <!-- Connection Hub -->
-      <section class="card" id="connectionHub" style="margin-bottom: 24px; border-left: 4px solid var(--accent-indigo);">
-        <div class="card-header">
-          <span class="card-title">🔌 Connection Hub</span>
-          <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--accent-indigo); font-size: 0.65rem;">STEP 1: CONNECT ACCOUNTS</span>
-        </div>
-        <div class="card-body" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-right: auto; max-width: 400px;">
-            To start syncing, connect at least one Google and one Microsoft account. We'll handle the rest.
-          </p>
-          <button class="btn btn-primary" onclick="connectGoogle()" style="gap: 8px; background: #fff; color: #000; border: 1px solid #ddd; padding: 12px 24px; font-weight: 700; cursor: pointer;">
-            <img src="https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png" width="20" alt="G"> Connect Google
-          </button>
-          <button class="btn btn-primary" onclick="connectMicrosoft()" style="gap: 8px; background: #00a4ef; color: #fff; border: none; padding: 12px 24px; font-weight: 700; cursor: pointer;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="20" alt="M"> Connect Outlook
-          </button>
-        </div>
-      </section>
-
-      <!-- Stats Grid -->
-      <section class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-          <div class="stat-icon indigo">📅</div>
-          <div class="stat-value" id="statCalendars">0</div>
-          <div class="stat-label">Connected Calendars</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon cyan">📋</div>
-          <div class="stat-value" id="statEvents">0</div>
-          <div class="stat-label">Tracked Events</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon emerald">🛡️</div>
-          <div class="stat-value" id="statShadows">0</div>
-          <div class="stat-label">Shadow Blocks</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon amber">⚡</div>
-          <div class="stat-value" id="statSyncs">0</div>
-          <div class="stat-label">Syncs Today</div>
-        </div>
-      </section>
-
-
-
-      <!-- Dashboard Footer (hidden on landing) -->
-      <div class="card" style="margin-bottom: 16px;">
-        <div class="card-header">
-          <span class="card-title">⚙️ Sync Pipeline</span>
-          <span class="realtime-badge">REAL-TIME</span>
-        </div>
-        <div class="card-body">
-          <div class="pipeline-visualizer" id="pipelineVisualizer">
-            <div class="pipeline-stage">
-              <div class="pipeline-icon active" id="pipeWebhook">1</div>
-              <div class="pipeline-label">Webhook</div>
-            </div>
-            <div class="pipeline-connector" id="connWebhook"></div>
-            <div class="pipeline-stage">
-              <div class="pipeline-icon" id="pipeFetch">2</div>
-              <div class="pipeline-label">Fetch</div>
-            </div>
-            <div class="pipeline-connector" id="connFetch"></div>
-            <div class="pipeline-stage">
-              <div class="pipeline-icon" id="pipeGuard">3</div>
-              <div class="pipeline-label">Loop Guard</div>
-            </div>
-            <div class="pipeline-connector" id="connGuard"></div>
-            <div class="pipeline-stage">
-              <div class="pipeline-icon" id="pipeUpsert">4</div>
-              <div class="pipeline-label">DB Upsert</div>
-            </div>
-            <div class="pipeline-connector" id="connUpsert"></div>
-            <div class="pipeline-stage">
-              <div class="pipeline-icon" id="pipeConflict">5</div>
-              <div class="pipeline-label">Conflict</div>
-            </div>
-            <div class="pipeline-connector" id="connConflict"></div>
-            <div class="pipeline-stage">
-              <div class="pipeline-icon" id="pipeShadow">6</div>
-              <div class="pipeline-label">Shadow Block</div>
-            </div>
-          </div>
-          <p style="margin-top:12px; font-size:0.72rem; color:var(--text-muted);">
-            Events flow through 6 stages: Webhook intake → Delta fetch → Loop prevention → Database upsert → Conflict resolution → Shadow block broadcast.
-          </p>
-        </div>
-      </div>
-
-      <!-- Power Tools & Webhook Health -->
-      <section class="section-grid" style="margin-bottom: 24px;">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">🛡️ Power Tools</span>
-          </div>
-          <div class="card-body" style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.05); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-              <span style="font-size: 0.8rem; font-weight: 600;">Boss Mode</span>
-              <label class="switch">
-                <input type="checkbox" id="bossModeToggle" onchange="toggleBossMode()">
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="purgeShadowBlocks()">🗑️ Purge Shadow Blocks</button>
-            <div style="width: 100%; margin-top: 8px; font-size: 0.72rem; color: var(--text-muted);">
-              <strong>Boss Mode:</strong> Replaces event titles with "Busy" for privacy demonstrations.<br>
-              <strong>Purge:</strong> Instantly deletes all cross-calendar "Reserved" blocks.
-            </div>
+      
+      <!-- Stats Row -->
+      <div class="dashboard-grid">
+        <div class="col-span-3 glass-panel stat-card">
+          <div class="stat-icon" style="color:var(--accent-primary);">📅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statCalendars">0</div>
+            <div class="stat-label">Connected Accounts</div>
           </div>
         </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📡 Webhook Health</span>
-            <button class="btn btn-ghost btn-sm" onclick="fetchWebhookStatus()">↻ Check</button>
-          </div>
-          <div class="card-body" id="webhookHealthList">
-            <div class="empty-state" style="padding: 12px;">
-              <p style="font-size: 0.75rem;">Loading health status...</p>
-            </div>
+        <div class="col-span-3 glass-panel stat-card">
+          <div class="stat-icon" style="color:var(--accent-secondary);">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statEvents">0</div>
+            <div class="stat-label">Tracked Events</div>
           </div>
         </div>
-      </section>
-
-      <!-- Two Column Grid -->
-      <div class="section-grid">
-        <!-- Active Bridges (Connected Accounts) -->
-        <div class="card" id="accountsCard">
-          <div class="card-header">
-            <span class="card-title">🔗 Active Bridges</span>
-            <button class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Refresh</button>
-          </div>
-          <div class="card-body" id="accountsList">
-            <div class="empty-state">
-              <div class="empty-icon">🔌</div>
-              <p>No calendars connected yet.<br>Connect Google or Outlook above.</p>
-            </div>
+        <div class="col-span-3 glass-panel stat-card">
+          <div class="stat-icon" style="color:var(--accent-success);">🛡️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statShadows">0</div>
+            <div class="stat-label">Shadow Blocks</div>
           </div>
         </div>
-
-        <!-- Activity Feed -->
-        <div class="card" id="activityCard">
-          <div class="card-header">
-            <span class="card-title">⚡ Activity Feed</span>
-            <button class="btn btn-ghost btn-sm" onclick="triggerSync()">🔄 Sync Now</button>
-          </div>
-          <div class="card-body" id="activityFeed">
-            <div class="empty-state">
-              <div class="empty-icon">📭</div>
-              <p>No sync activity yet.<br>Activity will appear here once calendars are connected.</p>
-            </div>
+        <div class="col-span-3 glass-panel stat-card">
+          <div class="stat-icon" style="color:var(--accent-warning);">⚡</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statSyncs">0</div>
+            <div class="stat-label">Daily Syncs</div>
           </div>
         </div>
       </div>
 
-      <!-- Calendar View -->
-      <div class="card" style="margin-top:16px;" id="meetingsCard">
-        <div class="card-header">
-          <span class="card-title">📅 Unified Calendar View</span>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:0.65rem; color:var(--text-muted);">Striped = Shadow Blocks</span>
-            <span id="lastUpdated" style="font-size: 0.65rem; color: var(--text-muted);">Never synced</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div id="calendar"></div>
-        </div>
-      </div>
-
-      <!-- State Machine + Architecture Info -->
-      <div class="section-grid" style="margin-top:16px;">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">🔧 State Machine</span>
-            <span style="font-size:0.65rem; color:var(--text-muted);">Pipeline status</span>
-          </div>
-          <div class="card-body">
-            <div class="state-machine" id="stateMachine">
-              <span class="state-node active" id="stateIdle">IDLE</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateWebhook">WEBHOOK</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateLoopCheck">LOOP CHECK</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateFetch">FETCH</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateConflict">CONFLICT</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateShadow">SHADOW</span>
-              <span class="state-arrow">→</span>
-              <span class="state-node" id="stateSync">DONE</span>
+      <!-- Main Columns -->
+      <div class="dashboard-grid">
+        
+        <!-- Left Column -->
+        <div class="col-span-4" style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Connections -->
+          <div class="glass-panel">
+            <div class="card-header">
+              <span class="card-title">🔌 Identity Bridges</span>
+              <button class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Refresh</button>
+            </div>
+            <div class="card-body">
+              <div id="accountsList">
+                <div style="text-align:center; padding:20px; color:var(--text-muted);">Loading connections...</div>
+              </div>
+              <div class="quick-connect-grid" style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:20px;">
+                <button class="provider-btn" onclick="connectGoogle()"><img src="https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png" width="16"> Add Google</button>
+                <button class="provider-btn" onclick="connectMicrosoft()"><img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="16"> Add Outlook</button>
+              </div>
             </div>
           </div>
+
+          <!-- Activity Feed -->
+          <div class="glass-panel">
+            <div class="card-header">
+              <span class="card-title">⚡ Live Activity</span>
+              <button class="btn btn-primary btn-sm" onclick="triggerSync()">Sync Now</button>
+            </div>
+            <div class="card-body" id="activityFeed">
+              <div style="text-align:center; padding:20px; color:var(--text-muted);">No recent activity.</div>
+            </div>
+          </div>
+
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📡 Architecture</span>
-          </div>
-          <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div>
-              <h4 style="font-size:0.78rem; color:var(--accent-indigo); margin-bottom:6px;">🔐 Zero-Friction Auth</h4>
-              <p style="font-size:0.72rem; color:var(--text-secondary);">Unified OAuth 2.0 flow. AES-256-GCM encrypted tokens.</p>
+        <!-- Right Column (Calendar) -->
+        <div class="col-span-8">
+          
+          <!-- Pipeline Visualizer -->
+          <div class="glass-panel" style="margin-bottom:24px;">
+            <div class="card-header">
+              <span class="card-title">⚙️ Synchronization Engine</span>
             </div>
-            <div>
-              <h4 style="font-size:0.78rem; color:var(--accent-cyan); margin-bottom:6px;">📡 Webhooks</h4>
-              <p style="font-size:0.72rem; color:var(--text-secondary);">Google Push + Microsoft Delta. Sub-second latency.</p>
-            </div>
-            <div>
-              <h4 style="font-size:0.78rem; color:var(--accent-emerald); margin-bottom:6px;">🛡️ Shadow Blocking</h4>
-              <p style="font-size:0.72rem; color:var(--text-secondary);">Auto "Reserved" events with infinite loop prevention.</p>
-            </div>
-            <div>
-              <h4 style="font-size:0.78rem; color:var(--accent-amber); margin-bottom:6px;">⚡ Conflict Resolution</h4>
-              <p style="font-size:0.72rem; color:var(--text-secondary);">Block All, Priority, or Manual strategies.</p>
+            <div class="pipeline-visualizer">
+              <div class="pipeline-stage"><div class="pipeline-icon" id="pipeWebhook">1</div><div class="pipeline-label">Webhook</div></div>
+              <div class="pipeline-connector" id="conn1"></div>
+              <div class="pipeline-stage"><div class="pipeline-icon" id="pipeFetch">2</div><div class="pipeline-label">Delta Fetch</div></div>
+              <div class="pipeline-connector" id="conn2"></div>
+              <div class="pipeline-stage"><div class="pipeline-icon" id="pipeUpsert">3</div><div class="pipeline-label">Database</div></div>
+              <div class="pipeline-connector" id="conn3"></div>
+              <div class="pipeline-stage"><div class="pipeline-icon" id="pipeShadow">4</div><div class="pipeline-label">Shadow Sync</div></div>
             </div>
           </div>
+
+          <!-- Calendar View -->
+          <div class="glass-panel">
+            <div class="card-header">
+              <span class="card-title">📅 Unified Availability</span>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Press <kbd style="background:var(--bg-primary); padding:2px 6px; border-radius:4px; border:1px solid var(--border-color);">⌘K</kbd> to search</span>
+              </div>
+            </div>
+            <div class="card-body" style="padding:16px;">
+              <div id="calendar"></div>
+            </div>
+          </div>
+
         </div>
       </div>
 
     </main>
   </div>
 
-  <!-- Toast -->
-  <div class="toast-container" id="toastContainer"></div>
+  <!-- Command Palette Modal -->
+  <div id="commandPalette" class="modal-overlay" onclick="closeCommandPalette(event)">
+    <div class="modal-content glass-panel command-palette" onclick="event.stopPropagation()">
+      <input type="text" id="paletteInput" class="palette-input" placeholder="Search events..." oninput="handlePaletteSearch(this.value)">
+      <div id="paletteResults" class="palette-results"></div>
+    </div>
+  </div>
 
   <!-- Event Creation Modal -->
-  <div id="eventModal" class="modal-overlay" style="display:none;" onclick="closeEventModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
+  <div id="eventModal" class="modal-overlay" onclick="closeEventModal(event)">
+    <div class="modal-content glass-panel" onclick="event.stopPropagation()">
       <div class="card-header">
-        <span class="card-title">📅 Create New Meeting</span>
+        <span class="card-title">Create Master Event</span>
         <button class="btn btn-ghost btn-sm" onclick="closeEventModal('esc')">✕</button>
       </div>
       <div class="card-body">
-        <form id="eventForm" onsubmit="handleCreateEvent(event)" style="display:flex; flex-direction:column; gap:16px;">
+        <form onsubmit="handleCreateEvent(event)">
           <div class="form-group">
-            <label>Provider & Account</label>
+            <label>Origin Account</label>
             <select id="eventIdentity" class="form-control" required></select>
           </div>
           <div class="form-group">
-            <label>Meeting Title</label>
-            <input type="text" id="eventSummary" class="form-control" placeholder="e.g., Weekly Sync" required>
+            <label>Event Title</label>
+            <input type="text" id="eventSummary" class="form-control" required>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
             <div class="form-group">
-              <label>Start Date & Time</label>
+              <label>Start</label>
               <input type="datetime-local" id="eventStart" class="form-control" required>
             </div>
             <div class="form-group">
-              <label>End Date & Time</label>
+              <label>End</label>
               <input type="datetime-local" id="eventEnd" class="form-control" required>
             </div>
           </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="eventDescription" class="form-control" rows="3" placeholder="Add meeting details..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Attendees (Comma separated emails)</label>
-            <input type="text" id="eventAttendees" class="form-control" placeholder="john@example.com, jane@example.com">
-          </div>
-          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
-            <button type="button" class="btn btn-ghost" onclick="closeEventModal('esc')">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="eventSubmitBtn">Create & Sync</button>
-          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:16px;">Deploy & Sync</button>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Password Reset Modal -->
-  <div id="resetModal" class="modal-overlay" style="display:none;" onclick="closeResetModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <div class="card-header">
-        <span class="card-title">🔐 Reset Password</span>
-        <button class="btn btn-ghost btn-sm" onclick="closeResetModal('esc')">✕</button>
-      </div>
-      <div class="card-body">
-        <div id="resetRequestStep">
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 16px;">Enter your email to receive a password reset link (Simulation).</p>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="resetEmail" class="form-control" placeholder="you@example.com">
-          </div>
-          <button class="btn btn-primary" style="width:100%; margin-top: 16px;" onclick="handleForgotPassword()">Send Reset Link</button>
-        </div>
-        <div id="resetFinalStep" style="display:none;">
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 16px;">Link sent! (For this demo, just enter your new password below to reset instantly).</p>
-          <div class="form-group">
-            <label>New Password</label>
-            <input type="password" id="newPassword" class="form-control" placeholder="Min 8 chars, 1 Uppercase, 1 Number">
-          </div>
-          <button class="btn btn-primary" style="width:100%; margin-top: 16px;" onclick="handleResetPassword()">Update Password</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Command Palette Modal -->
-  <div id="commandPalette" class="modal-overlay" style="display:none;" onclick="closeCommandPalette(event)">
-    <div class="modal-content command-palette" onclick="event.stopPropagation()">
-      <div class="palette-input-wrapper">
-        <span class="palette-search-icon">🔍</span>
-        <input type="text" id="paletteInput" placeholder="Search events across all calendars..." oninput="handlePaletteSearch(this.value)">
-        <span class="palette-hint">ESC to close</span>
-      </div>
-      <div id="paletteResults" class="palette-results">
-        <div class="empty-state">Start typing to search...</div>
-      </div>
-    </div>
-  </div>
-
-  <footer style="text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 0.78rem; border-top: 1px solid var(--border-color); margin-top: 40px;">
-    <p>&copy; 2026 OpenCalendar. All rights reserved.</p>
-    <div style="margin-top: 8px; display: flex; justify-content: center; gap: 20px;">
-      <a href="privacy.html" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
-      <a href="mailto:support@opencalender.site" style="color: var(--text-muted); text-decoration: none;">Support</a>
-    </div>
-  </footer>
-
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script src="/js/app.js?v=1.0.2"></script>
+  <script src="/js/app.js"></script>
 </body>
 </html>
