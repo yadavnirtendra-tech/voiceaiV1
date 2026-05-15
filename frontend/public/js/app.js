@@ -21,6 +21,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-refresh stats and health
     setInterval(updateStats, 10000);
     setInterval(checkHealth, 30000);
+
+    // Event Listeners (Fix for CSP blocking inline onclick)
+    document.getElementById('btn-new-agent-dash')?.addEventListener('click', openAgentModal);
+    document.getElementById('btn-new-agent-list')?.addEventListener('click', openAgentModal);
+    document.getElementById('btn-add-number')?.addEventListener('click', openNumberModal);
+    document.getElementById('btn-start-browser-call')?.addEventListener('click', startBrowserCall);
+
+    // Modal Close Buttons
+    document.querySelectorAll('.btn-ghost').forEach(btn => {
+        if (btn.querySelector('i[data-feather="x"]')) {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+    });
 });
 
 async function init() {

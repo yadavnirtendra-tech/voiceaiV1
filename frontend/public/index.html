@@ -82,7 +82,7 @@
                         <p>Real-time analytics and system performance</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="openAgentModal()">
+                        <button class="btn btn-primary" id="btn-new-agent-dash">
                             <i data-feather="plus"></i> New Agent
                         </button>
                     </div>
@@ -132,7 +132,7 @@
                         <select id="browser-agent-select">
                             <option value="">Choose an agent...</option>
                         </select>
-                        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="startBrowserCall()">
+                        <button class="btn btn-primary" id="btn-start-browser-call" style="width: 100%; justify-content: center;">
                             <i data-feather="phone"></i> Start Browser Call
                         </button>
                         <p style="font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 1rem;">
@@ -149,7 +149,7 @@
                         <h1>Voice Agents</h1>
                         <p>Create and configure your AI personas</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openAgentModal()">
+                    <button class="btn btn-primary" id="btn-new-agent-list">
                         <i data-feather="plus"></i> Create Agent
                     </button>
                 </header>
@@ -192,7 +192,7 @@
                         <h1>Phone Numbers</h1>
                         <p>Map Twilio numbers to AI agents</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openNumberModal()">
+                    <button class="btn btn-primary" id="btn-add-number">
                         <i data-feather="plus"></i> Add Number
                     </button>
                 </header>
