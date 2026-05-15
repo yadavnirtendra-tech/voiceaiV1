@@ -187,7 +187,7 @@
                   <button class="btn btn-ghost btn-sm" onclick="openEditUserModal('${u.id}', '${u.email}', '${u.displayName}', '${u.plan}', ${u.isAdmin})" title="Edit User">✏️ Edit</button>
                   <button class="btn btn-ghost btn-sm" onclick="resetPassword('${u.id}')" title="Reset Password">🔑 Reset</button>
                   <button class="btn btn-ghost btn-sm" onclick="toggleAdmin('${u.id}', ${!u.isAdmin})" title="Toggle Admin">⭐ ${u.isAdmin ? 'Demote' : 'Promote'}</button>
-                  <button class="btn btn-ghost btn-sm" style="color:var(--accent-danger); border-color:var(--accent-danger);" onclick="deleteUser('${u.id}')" title="Delete User">🗑️ Delete</button>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--accent-danger); border-color:var(--accent-danger);" onclick="deleteUser('${u.id}', this.closest('tr'))" title="Delete User">🗑️ Delete</button>
                 </div>
               </td>
             </tr>
@@ -230,16 +230,19 @@
       }
     }
 
-    async function deleteUser(userId) {
-      if (!confirm('WARNING: Are you absolutely sure you want to permanently delete this user and ALL their data?')) return;
-      const promptRes = prompt('Type DELETE to confirm:');
-      if (promptRes !== 'DELETE') return;
+    async function deleteUser(userId, rowElement) {
+      if (!confirm('WARNING: Are you sure you want to permanently delete this user and ALL their data?')) return;
+      
+      // Instant UI removal for snappiness
+      if (rowElement) rowElement.style.opacity = '0.5';
       
       const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         showToast('User permanently deleted', 'success');
+        if (rowElement) rowElement.remove();
         fetchAdminData();
       } else {
+        if (rowElement) rowElement.style.opacity = '1';
         showToast('Failed to delete user', 'error');
       }
     }
