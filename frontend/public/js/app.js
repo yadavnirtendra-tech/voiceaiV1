@@ -29,7 +29,12 @@ async function init() {
     await loadAgents();
     await loadCalls();
     await loadPhoneNumbers();
+    await loadVoices();
     
+    // Show correct section from hash
+    const section = window.location.hash.replace('#', '') || 'dashboard';
+    showSection(section);
+
     // Replace icons
     if (window.feather) feather.replace();
 }
@@ -38,9 +43,15 @@ async function init() {
 // NAVIGATION
 // ============================================
 
+window.addEventListener('hashchange', () => {
+    const section = window.location.hash.replace('#', '') || 'dashboard';
+    showSection(section);
+});
+
 function showSection(sectionId) {
     // Hide all sections
     document.querySelectorAll('main > section').forEach(s => s.style.display = 'none');
+    
     // Show target
     const target = document.getElementById(`${sectionId}-section`);
     if (target) {
@@ -49,8 +60,14 @@ function showSection(sectionId) {
     }
 
     // Update nav links
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.querySelector(`a[onclick="showSection('${sectionId}')"]`)?.classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(l => {
+        const href = l.getAttribute('href').replace('#', '');
+        if (href === sectionId) {
+            l.classList.add('active');
+        } else {
+            l.classList.remove('active');
+        }
+    });
 
     activeSection = sectionId;
     
@@ -58,6 +75,7 @@ function showSection(sectionId) {
     if (sectionId === 'agents') loadAgents();
     if (sectionId === 'calls') loadCalls();
     if (sectionId === 'numbers') loadPhoneNumbers();
+    if (sectionId === 'settings') checkHealth();
 }
 
 // ============================================
@@ -141,6 +159,19 @@ async function loadPhoneNumbers() {
     }
 }
 
+async function loadVoices() {
+    try {
+        const res = await fetch(`${API_URL}/voices`);
+        const data = await res.json();
+        const select = document.getElementById('agent-voice');
+        if (select && data.voices) {
+            select.innerHTML = data.voices.map(v => `<option value="${v.id}">${v.name} (${v.language})</option>`).join('');
+        }
+    } catch (err) {
+        console.error('Failed to load voices', err);
+    }
+}
+
 // ============================================
 // RENDERING
 // ============================================
@@ -166,8 +197,9 @@ function renderAgents() {
                     <span><i data-feather="clock" style="width: 12px; height: 12px;"></i> ${agent._count.calls} calls</span>
                     <span><i data-feather="cpu" style="width: 12px; height: 12px;"></i> ${agent.llmModel}</span>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                     <button class="btn btn-ghost" style="flex: 1; padding: 0.5rem;" onclick="editAgent('${agent.id}')">Edit</button>
+                    <button class="btn btn-ghost" style="flex: 1; padding: 0.5rem;" onclick="openKnowledgeModal('${agent.id}', '${agent.name}')">Knowledge</button>
                     <button class="btn btn-ghost" style="flex: 1; padding: 0.5rem; color: #ef4444;" onclick="deleteAgent('${agent.id}')">Delete</button>
                 </div>
             </div>
@@ -181,8 +213,11 @@ function updateAgentSelects() {
     const select = document.getElementById('browser-agent-select');
     if (!select) return;
     
-    select.innerHTML = '<option value="">Choose an agent...</option>' + 
-        agents.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    const agentOptions = agents.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    select.innerHTML = '<option value="">Choose an agent...</option>' + agentOptions;
+    
+    const phoneSelect = document.getElementById('phone-agent-select');
+    if (phoneSelect) phoneSelect.innerHTML = agentOptions;
 }
 
 function renderCalls() {
@@ -286,6 +321,9 @@ function editAgent(id) {
     document.getElementById('agent-voice').value = agent.voice;
     document.getElementById('agent-prompt').value = agent.systemPrompt;
     document.getElementById('agent-greeting').value = agent.greeting;
+    document.getElementById('agent-transfer').value = agent.transferNumber || '';
+    document.getElementById('agent-webhook').value = agent.webhookUrl || '';
+    document.getElementById('agent-webhook-events').value = agent.webhookEvents || 'call.started,call.ended,turn.complete';
     document.getElementById('agent-llm').value = agent.llmModel;
     document.getElementById('agent-tokens').value = agent.maxTokens;
     
@@ -302,6 +340,9 @@ document.getElementById('agent-form')?.addEventListener('submit', async (e) => {
         voice: document.getElementById('agent-voice').value,
         systemPrompt: document.getElementById('agent-prompt').value,
         greeting: document.getElementById('agent-greeting').value,
+        transferNumber: document.getElementById('agent-transfer').value,
+        webhookUrl: document.getElementById('agent-webhook').value,
+        webhookEvents: document.getElementById('agent-webhook-events').value,
         llmModel: document.getElementById('agent-llm').value,
         maxTokens: parseInt(document.getElementById('agent-tokens').value),
     };
@@ -360,6 +401,31 @@ async function startBrowserCall() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/voice/browser`;
         currentWS = new WebSocket(wsUrl);
+
+        // Native Browser STT Fallback
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                const result = event.results[event.results.length - 1];
+                const text = result[0].transcript;
+                const isFinal = result.isFinal;
+
+                // Send text directly to backend
+                if (isFinal && currentWS?.readyState === 1) {
+                    currentWS.send(JSON.stringify({ type: 'text', text }));
+                }
+                
+                appendMessage('user', text, isFinal);
+            };
+
+            recognition.start();
+            sessionStorage.setItem('stt_active', 'true');
+        }
 
         currentWS.onopen = () => {
             currentWS.send(JSON.stringify({ type: 'start', agentId }));
@@ -467,4 +533,170 @@ function endBrowserCall(notifyServer = true) {
     document.getElementById('call-ui').style.display = 'none';
     updateStats();
     loadCalls();
+}
+// ============================================
+// PHONE NUMBER ACTIONS
+// ============================================
+
+function openNumberModal() {
+    document.getElementById('number-form').reset();
+    document.getElementById('number-modal').style.display = 'flex';
+}
+
+function closeNumberModal() {
+    document.getElementById('number-modal').style.display = 'none';
+}
+
+document.getElementById('number-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        number: document.getElementById('phone-number-input').value,
+        agentId: document.getElementById('phone-agent-select').value,
+        label: document.getElementById('phone-label').value,
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/phones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            closeNumberModal();
+            loadPhoneNumbers();
+        } else {
+            const err = await res.json();
+            alert(`Error: ${err.error}`);
+        }
+    } catch (err) {
+        console.error('Failed to add number', err);
+    }
+});
+
+async function deletePhoneNumber(id) {
+    if (!confirm('Are you sure you want to remove this phone number?')) return;
+    try {
+        const res = await fetch(`${API_URL}/phones/${id}`, { method: 'DELETE' });
+        if (res.ok) loadPhoneNumbers();
+    } catch (err) {
+        console.error('Failed to delete number', err);
+    }
+}
+
+// ============================================
+// TRANSCRIPT VIEWER
+// ============================================
+
+async function viewTranscript(id) {
+    try {
+        const res = await fetch(`${API_URL}/calls/${id}`);
+        const data = await res.json();
+        const call = data.call;
+
+        document.getElementById('transcript-title').textContent = `Call with ${call.agent.name}`;
+        document.getElementById('transcript-subtitle').textContent = `${new Date(call.startedAt).toLocaleString()} • Duration: ${Math.floor(call.durationMs / 1000)}s • Status: ${call.status}`;
+        
+        const body = document.getElementById('transcript-body');
+        body.innerHTML = call.messages.length > 0 
+            ? call.messages.map(m => `
+                <div class="msg msg-${m.role === 'user' ? 'user' : 'bot'}" style="max-width: 90%; margin-bottom: 0.5rem;">
+                    <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 0.2rem;">${m.role.toUpperCase()}</div>
+                    ${m.content}
+                </div>
+            `).join('')
+            : '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No messages recorded for this call.</div>';
+
+        document.getElementById('transcript-modal').style.display = 'flex';
+        body.scrollTop = 0;
+    } catch (err) {
+        console.error('Failed to load transcript', err);
+        alert('Could not load transcript');
+    }
+}
+
+function closeTranscriptModal() {
+    document.getElementById('transcript-modal').style.display = 'none';
+}
+
+// ============================================
+// KNOWLEDGE BASE ACTIONS
+// ============================================
+
+let currentKbAgentId = null;
+
+async function openKnowledgeModal(agentId, agentName) {
+    currentKbAgentId = agentId;
+    document.getElementById('kb-agent-name').textContent = `Knowledge Base: ${agentName}`;
+    document.getElementById('kb-form').reset();
+    document.getElementById('knowledge-modal').style.display = 'flex';
+    await loadKnowledgeItems();
+}
+
+function closeKnowledgeModal() {
+    document.getElementById('knowledge-modal').style.display = 'none';
+    currentKbAgentId = null;
+}
+
+async function loadKnowledgeItems() {
+    try {
+        const res = await fetch(`${API_URL}/knowledge/${currentKbAgentId}`);
+        const data = await res.json();
+        renderKnowledgeItems(data.items);
+    } catch (err) {
+        console.error('Failed to load KB items', err);
+    }
+}
+
+function renderKnowledgeItems(items) {
+    const list = document.getElementById('kb-items-list');
+    if (items.length === 0) {
+        list.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No knowledge items yet. Add some Q&A to train your agent.</div>';
+        return;
+    }
+
+    list.innerHTML = items.map(item => `
+        <div class="card" style="padding: 1rem; margin-bottom: 0; background: rgba(255,255,255,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                <div style="font-weight: 700; color: var(--primary);">Q: ${item.question}</div>
+                <button class="btn btn-ghost" style="padding: 0.2rem; color: #ef4444;" onclick="deleteKnowledgeItem('${item.id}')">
+                    <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                </button>
+            </div>
+            <div style="font-size: 0.875rem; color: var(--text-dim);">A: ${item.answer}</div>
+        </div>
+    `).join('');
+    feather.replace();
+}
+
+document.getElementById('kb-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        agentId: currentKbAgentId,
+        question: document.getElementById('kb-question').value,
+        answer: document.getElementById('kb-answer').value,
+        priority: 0
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/knowledge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            document.getElementById('kb-form').reset();
+            loadKnowledgeItems();
+        }
+    } catch (err) {
+        console.error('Failed to add KB item', err);
+    }
+});
+
+async function deleteKnowledgeItem(id) {
+    try {
+        const res = await fetch(`${API_URL}/knowledge/${id}`, { method: 'DELETE' });
+        if (res.ok) loadKnowledgeItems();
+    } catch (err) {
+        console.error('Failed to delete KB item', err);
+    }
 }

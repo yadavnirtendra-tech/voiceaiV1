@@ -11,40 +11,55 @@ import logger from '../../utils/logger.js';
 
 const TTS_API = `${config.kokoroTtsUrl}/v1`;
 
+// Local Transformers.js state
+let localTts = null;
+let isInitializingLocal = false;
+
 /**
  * Check TTS service health
  */
 export async function checkTtsHealth() {
   try {
     const res = await fetch(`${config.kokoroTtsUrl}/v1/audio/voices`);
-    if (!res.ok) return { healthy: false, error: 'Kokoro TTS not responding' };
-    const voices = await res.json();
-    return { healthy: true, voices: Array.isArray(voices) ? voices : [] };
+    if (res.ok) return { healthy: true, provider: 'Docker API' };
   } catch (err) {
-    // Try alternative health check endpoint
-    try {
-      const res2 = await fetch(`${config.kokoroTtsUrl}/`);
-      return { healthy: res2.ok, voices: [], fallback: true };
-    } catch {
-      return { healthy: false, error: err.message };
-    }
+    if (localTts) return { healthy: true, provider: 'Local Transformers.js' };
+    return { healthy: false, error: 'Service offline (Docker not running)' };
+  }
+}
+
+/**
+ * Initialize local TTS (Transformers.js)
+ */
+async function initLocalTts() {
+  if (localTts || isInitializingLocal) return;
+  isInitializingLocal = true;
+  
+  try {
+    logger.info('Initializing local Kokoro TTS (Transformers.js)...');
+    const { KokoroTTS } = await import('kokoro-js');
+    localTts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
+      dtype: "q8",
+      device: "cpu",
+    });
+    logger.info('Local Kokoro TTS ready');
+  } catch (err) {
+    logger.error('Failed to init local TTS', { error: err.message });
+  } finally {
+    isInitializingLocal = false;
   }
 }
 
 /**
  * Generate speech audio from text
- * Returns raw audio buffer (WAV format)
- * @param {string} text - Text to synthesize
- * @param {Object} options - {voice, speed, format}
- * @returns {Promise<{audioBuffer: Buffer, latencyMs: number}>}
  */
 export async function synthesize(text, options = {}) {
   const voice = options.voice || config.kokoroVoice;
   const speed = options.speed || config.kokoroSpeed;
-  const format = options.format || 'wav';
-
+  
   const startTime = Date.now();
 
+  // Try API first
   try {
     const res = await fetch(`${TTS_API}/audio/speech`, {
       method: 'POST',
@@ -54,23 +69,31 @@ export async function synthesize(text, options = {}) {
         input: text,
         voice: voice,
         speed: speed,
-        response_format: format,
+        response_format: 'wav',
       }),
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`TTS error ${res.status}: ${errorText}`);
+    if (res.ok) {
+      const audioBuffer = Buffer.from(await res.arrayBuffer());
+      return { audioBuffer, latencyMs: Date.now() - startTime, format: 'wav' };
     }
-
-    const audioBuffer = Buffer.from(await res.arrayBuffer());
-    const latencyMs = Date.now() - startTime;
-
-    logger.debug(`TTS synthesized: "${text.substring(0, 50)}..." in ${latencyMs}ms (${audioBuffer.length} bytes)`);
-
-    return { audioBuffer, latencyMs, format };
   } catch (err) {
-    logger.error('TTS synthesis error', { error: err.message, text: text.substring(0, 100) });
+    logger.debug('TTS API unavailable, attempting local fallback...');
+  }
+
+  // Fallback to local Transformers.js
+  try {
+    await initLocalTts();
+    if (!localTts) throw new Error('Local TTS not available');
+
+    const audio = await localTts.generate(text, { voice });
+    // Convert Float32Array to WAV Buffer
+    const wavBuffer = await audio.toWav();
+    const buffer = Buffer.from(wavBuffer);
+
+    return { audioBuffer: buffer, latencyMs: Date.now() - startTime, format: 'wav' };
+  } catch (err) {
+    logger.error('TTS synthesis failed (both API and Local)', { error: err.message });
     throw err;
   }
 }

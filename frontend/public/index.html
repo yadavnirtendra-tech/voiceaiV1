@@ -34,27 +34,27 @@
             <nav>
                 <ul>
                     <li>
-                        <a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')">
+                        <a href="#dashboard" class="nav-link active">
                             <i data-feather="grid"></i> Dashboard
                         </a>
                     </li>
                     <li>
-                        <a href="#agents" class="nav-link" onclick="showSection('agents')">
+                        <a href="#agents" class="nav-link">
                             <i data-feather="users"></i> Voice Agents
                         </a>
                     </li>
                     <li>
-                        <a href="#calls" class="nav-link" onclick="showSection('calls')">
+                        <a href="#calls" class="nav-link">
                             <i data-feather="phone-call"></i> Call Logs
                         </a>
                     </li>
                     <li>
-                        <a href="#numbers" class="nav-link" onclick="showSection('numbers')">
+                        <a href="#numbers" class="nav-link">
                             <i data-feather="hash"></i> Phone Numbers
                         </a>
                     </li>
                     <li>
-                        <a href="#settings" class="nav-link" onclick="showSection('settings')">
+                        <a href="#settings" class="nav-link">
                             <i data-feather="settings"></i> System Health
                         </a>
                     </li>
@@ -82,7 +82,7 @@
                         <p>Real-time analytics and system performance</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="showSection('agents')">
+                        <button class="btn btn-primary" onclick="openAgentModal()">
                             <i data-feather="plus"></i> New Agent
                         </button>
                     </div>
@@ -201,6 +201,20 @@
                 </div>
             </section>
 
+            <!-- Knowledge Base Management Section (Internal) -->
+            <section id="knowledge-section" class="fade-in" style="display: none;">
+                <header>
+                    <div class="header-title">
+                        <h1 id="kb-page-title">Knowledge Base</h1>
+                        <p>Training data for your AI agent</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="showSection('agents')">Back to Agents</button>
+                </header>
+                <div class="card">
+                     <!-- This is handled via the modal for now, but adding section for robustness -->
+                </div>
+            </section>
+
             <!-- Health/Settings Section -->
             <section id="settings-section" class="fade-in" style="display: none;">
                 <header>
@@ -245,11 +259,30 @@
                 </div>
                 
                 <label>System Prompt</label>
-                <textarea id="agent-prompt" rows="4" placeholder="You are a helpful assistant..." required></textarea>
+                <textarea id="agent-prompt" rows="3" placeholder="You are a helpful assistant..." required></textarea>
                 
-                <label>Greeting Message</label>
-                <input type="text" id="agent-greeting" placeholder="Hello! How can I help you today?">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Greeting Message</label>
+                        <input type="text" id="agent-greeting" placeholder="Hello! How can I help you today?">
+                    </div>
+                    <div>
+                        <label>Transfer Number</label>
+                        <input type="text" id="agent-transfer" placeholder="+1234567890">
+                    </div>
+                </div>
                 
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Webhook URL</label>
+                        <input type="url" id="agent-webhook" placeholder="https://api.myapp.com/voice-events">
+                    </div>
+                    <div>
+                        <label>Webhook Events (comma separated)</label>
+                        <input type="text" id="agent-webhook-events" value="call.started,call.ended,turn.complete">
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
                         <label>LLM Model</label>
@@ -299,6 +332,85 @@
                 <div class="bar" style="animation-delay: 0.5s"></div>
                 <div class="bar" style="animation-delay: 0.6s"></div>
                 <div class="bar" style="animation-delay: 0.7s"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Number Modal -->
+    <div id="number-modal" class="modal" style="display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 2rem;">
+        <div class="card" style="width: 100%; max-width: 450px;">
+            <div class="card-header">
+                <h2>Add Phone Number</h2>
+                <button class="btn btn-ghost" onclick="closeNumberModal()" style="padding: 0.5rem;"><i data-feather="x"></i></button>
+            </div>
+            <form id="number-form">
+                <label>Phone Number (E.164 format)</label>
+                <input type="text" id="phone-number-input" placeholder="+1234567890" required>
+                
+                <label>Select Agent</label>
+                <select id="phone-agent-select" required>
+                    <!-- Loaded via JS -->
+                </select>
+                
+                <label>Label (Optional)</label>
+                <input type="text" id="phone-label" placeholder="Support Line">
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">Add Number</button>
+                    <button type="button" class="btn btn-ghost" onclick="closeNumberModal()" style="flex: 1; justify-content: center;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transcript Modal -->
+    <div id="transcript-modal" class="modal" style="display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 2rem;">
+        <div class="card" style="width: 100%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="card-header">
+                <div>
+                    <h2 id="transcript-title">Call Transcript</h2>
+                    <p id="transcript-subtitle" style="font-size: 0.875rem; color: var(--text-dim);"></p>
+                </div>
+                <button class="btn btn-ghost" onclick="closeTranscriptModal()" style="padding: 0.5rem;"><i data-feather="x"></i></button>
+            </div>
+            
+            <div id="transcript-body" class="transcript-area" style="flex: 1; min-height: 400px; background: rgba(0,0,0,0.2);">
+                <!-- Messages will be loaded here -->
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                <button class="btn btn-ghost" onclick="closeTranscriptModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Knowledge Base Modal -->
+    <div id="knowledge-modal" class="modal" style="display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 2rem;">
+        <div class="card" style="width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="card-header">
+                <div>
+                    <h2 id="kb-agent-name">Knowledge Base</h2>
+                    <p style="font-size: 0.875rem; color: var(--text-dim);">Train your agent with custom Q&A items</p>
+                </div>
+                <button class="btn btn-ghost" onclick="closeKnowledgeModal()" style="padding: 0.5rem;"><i data-feather="x"></i></button>
+            </div>
+            
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
+                <form id="kb-form" style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 0.5rem; align-items: end;">
+                    <div>
+                        <label>Question / Keyword</label>
+                        <input type="text" id="kb-question" placeholder="What is your pricing?" style="margin-bottom: 0;">
+                    </div>
+                    <div>
+                        <label>Answer / Response</label>
+                        <input type="text" id="kb-answer" placeholder="Our pricing is free for self-hosted users." style="margin-bottom: 0;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height: 42px; justify-content: center;">Add</button>
+                </form>
+            </div>
+
+            <div id="kb-items-list" style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- KB items loaded here -->
             </div>
         </div>
     </div>
